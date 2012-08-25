@@ -17,7 +17,7 @@ class Player( MovingSprite ):
 	control_MOVE_DOWN = pygame.K_s
 	control_MOVE_LEFT = pygame.K_a
 
-	max_speed 	= [400.0, 200.0] # Pixels per second
+	max_speed 	= [600.0, 400.0] # Pixels per second
 	cur_speed 	= [0.0, 0.0]
 	accl 		= [10.0, 20.0] # Change per second
 	dccl		= [5.0, 10.0]
@@ -63,9 +63,9 @@ class Player( MovingSprite ):
 		# Flip which gun fires the particle
 		self.energy_flip = 1 - self.energy_flip
 		if (self.energy_flip):
-			vector = Vector2D.AddVectors( self.vector, [0, 9] )
+			vector = Vector2D.AddVectors( self.vector, [direction * 20, 9] )
 		else:
-			vector = Vector2D.AddVectors( self.vector, [0, 19] )
+			vector = Vector2D.AddVectors( self.vector, [direction * 20, 19] )
 
 		# Create energy particle
 		EnergyParticle( vector, direction )
@@ -141,6 +141,16 @@ class Player( MovingSprite ):
 # -------- EnergyParticle --------
 class EnergyParticle( StaticSprite ):
 	max_speed = [1000.0, 0.0]
+	collide_with = [
+		{
+			'group': Config.app.sprite_groups['friendly-plants'],
+			'event': 'FriendlyPlantEnergyCollisionEvent'
+		},
+		{
+			'group': Config.app.sprite_groups['enemy-bugs'],
+			'event': 'EnemyBugEnergyCollisionEvent'
+		}
+	]
 
 	# Init
 	def __init__( self, vector, direction ):
@@ -152,6 +162,7 @@ class EnergyParticle( StaticSprite ):
 
 		self.direction = direction
 
+
 	# Update
 	def Update( self, frame_time, ticks ):
 		m = (frame_time / 1000.0) * self.direction
@@ -160,6 +171,14 @@ class EnergyParticle( StaticSprite ):
 		self.vector = Vector2D.AddVectors( self.vector, self.move_vector )
 
 		StaticSprite.Update( self, frame_time, ticks )
+
+		if self.vector[0] > Config.screen_w * Config.world_size or self.vector[0] < 0:
+			self.kill( )
+
+
+	# On Collision
+	def OnCollision( ):
+		self.kill( )
 
 
 # -------- Player Keyboard Listener --------

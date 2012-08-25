@@ -55,7 +55,8 @@ class App( ):
 		# Create the sprite groups and layers
 		self.sprite_groups['player'] = pygame.sprite.Group( )
 		self.sprite_groups['energy-particles'] = pygame.sprite.Group( )
-		self.sprite_groups['friendly'] = pygame.sprite.Group( )
+		self.sprite_groups['friendly-plants'] = pygame.sprite.Group( )
+		self.sprite_groups['friendly-spores'] = pygame.sprite.Group( )
 		self.sprites_all = pygame.sprite.LayeredUpdates( )
 
 		# Create the world
@@ -81,19 +82,21 @@ class App( ):
 
 	def TickGame( self, frame_time ):
 
-		# Convert to black
+		# Fill with black
 		Config.screen.fill( (0,0,0) )
 
 		# Get terrain
 		Config.screen.blit( Config.world.terrain, (0, 0) )
 
-		#print self.sprites_all
-
+		# Update sprites
 		for s in self.sprites_all:
 			s.Update( int(frame_time), int(pygame.time.get_ticks()) )
 
+		# Draw sprites
 		rects = self.sprites_all.draw( Config.screen )
+
 		#pygame.display.update( rects )
+
 		pygame.display.flip( )
 
 

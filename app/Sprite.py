@@ -8,7 +8,6 @@ import Vector2D
 
 # Definitions
 folder = "sprites/"
-scale = 2
 
 
 # -------- Static Sprite --------
@@ -31,6 +30,7 @@ class StaticSprite( pygame.sprite.Sprite ):
 	def Update( self, frame_time, ticks ):
 		self.rect.x = self.vector[0]
 		self.rect.y = self.vector[1]
+
 
 
 # -------- Animated Sprite --------
@@ -120,6 +120,7 @@ class AnimatedSprite( pygame.sprite.Sprite ):
 	# Update
 	def Update( self, frame_time, ticks ):
 		self.UpdateAnimation( ticks )
+
 
 
 # -------- Moving Sprite --------
