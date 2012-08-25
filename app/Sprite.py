@@ -4,6 +4,7 @@
 
 # Imports
 import pygame
+import Vector2D
 
 # Definitions
 folder = "sprites/"
@@ -16,15 +17,20 @@ class StaticSprite( pygame.sprite.Sprite ):
 	image_angle = False
 
 	# Init
-	def __init__( self, src, vector, layer ):
-		pygame.sprite.Sprite.__init__( self )
+	def __init__( self, src, vector ):
+		pygame.sprite.Sprite.__init__( self, self.groups )
 
-		self.image = pygame.image.load( src ).convert_alpha( )
+		self.vector = vector
+		self.image = pygame.image.load( folder+src ).convert_alpha( )
+		self.rect = self.image.get_rect( )
+		self.rect.x = vector[0]
+		self.rect.y = vector[1]
 
 
 	# Update
 	def Update( self, frame_time, ticks ):
-		pass
+		self.rect.x = self.vector[0]
+		self.rect.y = self.vector[1]
 
 
 # -------- Animated Sprite --------
@@ -34,14 +40,13 @@ class AnimatedSprite( pygame.sprite.Sprite ):
 	image_angle = False
 
 	# Init
-	def __init__( self, src, vector, layer ):
+	def __init__( self, src, vector ):
 		pygame.sprite.Sprite.__init__( self, self.groups )
 
 		self.images = [ ]
 		self.frames = 0
 		self.states = { }
 		self.vector = vector
-		self.layer = layer
 
 		self.src_image = pygame.image.load( folder+src ).convert_alpha( )
 		self.src_width, self.src_height = self.src_image.get_size( )
@@ -102,10 +107,10 @@ class AnimatedSprite( pygame.sprite.Sprite ):
 			if self._frame < state['start']: self._frame = state['start']
 			if self._frame > state['end']:   self._frame = state['start']
 
-			if self._frame != frame:
+			#if self._frame != frame:
 				# Update image
-				self.image = self.images[self._frame]
-				self._last_update = ticks
+			self.image = self.images[self._frame]
+			self._last_update = ticks
 
 			# Update angle
 			if self.image_angle != False:
@@ -115,3 +120,41 @@ class AnimatedSprite( pygame.sprite.Sprite ):
 	# Update
 	def Update( self, frame_time, ticks ):
 		self.UpdateAnimation( ticks )
+
+
+# -------- Moving Sprite --------
+class MovingSprite( AnimatedSprite ):
+	max_speed 	= [100.0, 100.0] # Pixels per second
+	cur_speed 	= [0.0, 0.0]
+	accl 		= [20.0, 20.0] # Change per second
+	dccl		= [10.0, 10.0]
+	is_accl 	= [0, 0]
+
+	# Move
+	def Move( self, frame_time ):
+		m = frame_time / 1000.0
+
+		for i in range( 2 ):
+			if self.is_accl[i] != 0:
+				self.cur_speed[i] += self.accl[i] * self.is_accl[i]
+
+				if self.cur_speed[i] > self.max_speed[i]: self.cur_speed[i] = self.max_speed[i]
+				if self.cur_speed[i] < -self.max_speed[i]: self.cur_speed[i] = -self.max_speed[i]
+
+			else:
+				if self.cur_speed[i] > 0:
+					self.cur_speed[i] -= self.dccl[i]
+					if self.cur_speed[i] < self.dccl[i]: self.cur_speed[i] = 0.0
+				elif self.cur_speed[i] < 0:
+					self.cur_speed[i] += self.dccl[i]
+					if self.cur_speed[i] > self.dccl[i]: self.cur_speed[i] = 0.0
+
+			self.move_vector[i] = self.cur_speed[i] * m
+
+		self.vector = Vector2D.AddVectors( self.vector, self.move_vector )
+
+
+	# Update
+	def Update( self, frame_time, ticks ):
+		AnimatedSprite.Update( self, frame_time, ticks )
+		self.Move( frame_time )

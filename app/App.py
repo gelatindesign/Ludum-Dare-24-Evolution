@@ -6,6 +6,7 @@
 # Imports
 import pygame, Config
 from Event import EventManager, EventListener
+from World import World
 from Player import Player
 
 # -------- App --------
@@ -53,7 +54,13 @@ class App( ):
 	def LoadGame( self ):
 		# Create the sprite groups and layers
 		self.sprite_groups['player'] = pygame.sprite.Group( )
+		self.sprite_groups['energy-particles'] = pygame.sprite.Group( )
+		self.sprite_groups['friendly'] = pygame.sprite.Group( )
 		self.sprites_all = pygame.sprite.LayeredUpdates( )
+
+		# Create the world
+		Config.world = World( )
+		Config.world.GenerateTerrain( Config.screen_w * Config.world_size )
 
 		# Create the player
 		p = Player( )
@@ -73,7 +80,14 @@ class App( ):
 
 
 	def TickGame( self, frame_time ):
+
+		# Convert to black
 		Config.screen.fill( (0,0,0) )
+
+		# Get terrain
+		Config.screen.blit( Config.world.terrain, (0, 0) )
+
+		#print self.sprites_all
 
 		for s in self.sprites_all:
 			s.Update( int(frame_time), int(pygame.time.get_ticks()) )

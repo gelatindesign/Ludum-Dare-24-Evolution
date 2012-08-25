@@ -6,10 +6,10 @@
 import pygame, Config
 import Vector2D
 from Event import EventManager, EventListener
-from Sprite import StaticSprite, AnimatedSprite
+from Sprite import StaticSprite, MovingSprite
 
 # -------- Player --------
-class Player( AnimatedSprite ):
+class Player( MovingSprite ):
 	control_FIRE_PRIMARY = 1 # Mouse left
 	control_FIRE_SECONDARY = 3 # Mouse right
 	control_MOVE_UP = pygame.K_w
@@ -19,11 +19,16 @@ class Player( AnimatedSprite ):
 
 	max_speed 	= [400.0, 200.0] # Pixels per second
 	cur_speed 	= [0.0, 0.0]
-	accl 		= [20.0, 30.0] # Change per second
-	dccl		= [10.0, 20.0]
+	accl 		= [10.0, 20.0] # Change per second
+	dccl		= [5.0, 10.0]
 	is_accl 	= [0, 0]
 
 	move_vector = [0, 0]
+
+	energy_flip = 0
+	energy_rate = 8 # per second
+	is_firing_energy = False
+	has_fired_energy = False
 	
 	# Init
 	def __init__( self ):
@@ -32,68 +37,62 @@ class Player( AnimatedSprite ):
 		self._layer = Config.sprite_layer_player
 
 		# Create as animated sprite
-		AnimatedSprite.__init__(
+		MovingSprite.__init__(
 			self,
 			"player/player.png",
-			[20, Config.screen_h / 2],
-			False
+			[20, Config.screen_h / 2]
 		)
 
 		self.AddAnimationState( "moving", 0, 7, 6 )
 		self.SetAnimationState( "moving" )
 
 		# Register listeners
-		Config.app.em.RegisterListener( MouseListener() )
-		Config.app.em.RegisterListener( KeyboardListener() )
+		Config.app.em.RegisterListener( PlayerMouseListener() )
+		Config.app.em.RegisterListener( PlayerKeyboardListener() )
 
 		Config.player = self
 
 
-	# Move
-	def Move( self, frame_time ):
-		m = frame_time / 1000.0
-
-		for i in range( 2 ):
-			if self.is_accl[i] != 0:
-				self.cur_speed[i] += self.accl[i] * self.is_accl[i]
-
-				if self.cur_speed[i] > self.max_speed[i]: self.cur_speed[i] = self.max_speed[i]
-				if self.cur_speed[i] < -self.max_speed[i]: self.cur_speed[i] = -self.max_speed[i]
-
-			else:
-				if self.cur_speed[i] > 0:
-					self.cur_speed[i] -= self.dccl[i]
-					if self.cur_speed[i] < self.dccl[i]: self.cur_speed[i] = 0.0
-				elif self.cur_speed[i] < 0:
-					self.cur_speed[i] += self.dccl[i]
-					if self.cur_speed[i] > self.dccl[i]: self.cur_speed[i] = 0.0
-
-			self.move_vector[i] = self.cur_speed[i] * m
-
-		self.vector = Vector2D.AddVectors( self.vector, self.move_vector )
-
-
 	# Fire Energy
-	def FireEnergy( self, target_vector ):
-		e = EnergyParticle( self.vector, target_vector )
+	def FireEnergy( self ):
+		if self.cur_speed[0] >= 0:
+			direction = 1
+		else:
+			direction = -1
+
+		# Flip which gun fires the particle
+		self.energy_flip = 1 - self.energy_flip
+		if (self.energy_flip):
+			vector = Vector2D.AddVectors( self.vector, [0, 9] )
+		else:
+			vector = Vector2D.AddVectors( self.vector, [0, 19] )
+
+		# Create energy particle
+		EnergyParticle( vector, direction )
 
 
 	# Fire Pulse
 	def FirePulse( self ):
 		pass
 
-
+	
 	# Update
 	def Update( self, frame_time, ticks ):
-		AnimatedSprite.Update( self, frame_time, ticks )
-		self.Move( frame_time )
+		if self.is_firing_energy:
+			if self.has_fired_energy <= 0:
+				self.FireEnergy( )
+				self.has_fired_energy = 1000 / self.energy_rate
+
+		if self.has_fired_energy > 0:
+			self.has_fired_energy -= frame_time
+
+		MovingSprite.Update( self, frame_time, ticks )
 
 
 	# Control Mouse Down
 	def ControlMouseDown( self, event ):
 		if event.button == self.control_FIRE_PRIMARY:
-			target_vector = [ event.pos[0], event.pos[1] ]
-			self.FireEnergy( target_vector )
+			self.is_firing_energy = True
 
 		elif event.button == self.control_FIRE_SECONDARY:
 			self.FirePulse( )
@@ -101,7 +100,8 @@ class Player( AnimatedSprite ):
 
 	# Control Mouse Up
 	def ControlMouseUp( self, event ):
-		pass
+		if event.button == self.control_FIRE_PRIMARY:
+			self.is_firing_energy = False
 
 
 	# Control Mouse Motion
@@ -140,11 +140,30 @@ class Player( AnimatedSprite ):
 
 # -------- EnergyParticle --------
 class EnergyParticle( StaticSprite ):
-	pass
+	max_speed = [1000.0, 0.0]
+
+	# Init
+	def __init__( self, vector, direction ):
+		# Set groups & layer
+		self.groups = Config.app.sprite_groups['energy-particles'], Config.app.sprites_all
+		self._layer = Config.sprite_layer_player
+
+		StaticSprite.__init__( self, "player/energy-particle.png", vector )
+
+		self.direction = direction
+
+	# Update
+	def Update( self, frame_time, ticks ):
+		m = (frame_time / 1000.0) * self.direction
+
+		self.move_vector = Vector2D.MultiplyVectors( self.max_speed, [m, 0] )
+		self.vector = Vector2D.AddVectors( self.vector, self.move_vector )
+
+		StaticSprite.Update( self, frame_time, ticks )
 
 
-# -------- Keyboard Listener --------
-class KeyboardListener( EventListener ):
+# -------- Player Keyboard Listener --------
+class PlayerKeyboardListener( EventListener ):
 	# Notify
 	def Notify( self, event ):
 		if event.name == "Pygame Event":
@@ -155,8 +174,8 @@ class KeyboardListener( EventListener ):
 				Config.player.ControlKeyUp( event.data )
 
 
-# -------- Mouse Listener ---------
-class MouseListener( EventListener ):
+# -------- Player Mouse Listener ---------
+class PlayerMouseListener( EventListener ):
 	# Notify
 	def Notify( self, event ):
 		if event.name == "Pygame Event":
