@@ -29,6 +29,8 @@ pygame.display.set_caption( app.Config.app_title )
 pygame.display.set_icon( pygame.image.load( "icon.png" ).convert_alpha( ) )
 app.Config.screen.convert( )
 
+# Create the clock
+clock = pygame.time.Clock( )
 
 # TEMP
 app.Config.app.LoadGame( )
@@ -43,7 +45,8 @@ while app.Config.app.running:
 		app.Config.app.em.Post( event )
 
 	# Process tick
-	app.Config.app.Tick( )
+	clock.tick( app.Config.fps )
+	app.Config.app.Tick( clock.get_time() )
 
 
 # -------- Exit --------

@@ -4,6 +4,7 @@
 
 # General Information
 app_title = "Neon Spores"
+fps = 60
 
 # Sprite Layers
 sprite_layer_player = 1

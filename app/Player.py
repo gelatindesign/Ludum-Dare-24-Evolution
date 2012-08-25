@@ -12,8 +12,18 @@ from Sprite import StaticSprite, AnimatedSprite
 class Player( AnimatedSprite ):
 	control_FIRE_PRIMARY = 1 # Mouse left
 	control_FIRE_SECONDARY = 3 # Mouse right
+	control_MOVE_UP = pygame.K_w
+	control_MOVE_RIGHT = pygame.K_d
+	control_MOVE_DOWN = pygame.K_s
+	control_MOVE_LEFT = pygame.K_a
 
-	speed = 1 # Pixels per tick
+	max_speed 	= [400.0, 200.0] # Pixels per second
+	cur_speed 	= [0.0, 0.0]
+	accl 		= [20.0, 30.0] # Change per second
+	dccl		= [10.0, 20.0]
+	is_accl 	= [0, 0]
+
+	move_vector = [0, 0]
 	
 	# Init
 	def __init__( self ):
@@ -25,7 +35,7 @@ class Player( AnimatedSprite ):
 		AnimatedSprite.__init__(
 			self,
 			"player/player.png",
-			[20, 20], #[0, Config.screen_h / 2]
+			[20, Config.screen_h / 2],
 			False
 		)
 
@@ -40,17 +50,27 @@ class Player( AnimatedSprite ):
 
 
 	# Move
-	def Move( self, event ):
-		if event.key == self.control_MOVE_UP:
-			move_vector = Vector2D.UP
-		elif event.key == self.control_MOVE_RIGHT:
-			move_vector = Vector2D.RIGHT
-		elif event.key == self.control_MOVE_DOWN:
-			move_vector = Vector2D.DOWN
-		elif event.key == self.control_MOVE_LEFT:
-			move_vector = Vector2D.LEFT
+	def Move( self, frame_time ):
+		m = frame_time / 1000.0
 
-		self.vector = Vector2D.AddVectors( self.vector, move_vector )
+		for i in range( 2 ):
+			if self.is_accl[i] != 0:
+				self.cur_speed[i] += self.accl[i] * self.is_accl[i]
+
+				if self.cur_speed[i] > self.max_speed[i]: self.cur_speed[i] = self.max_speed[i]
+				if self.cur_speed[i] < -self.max_speed[i]: self.cur_speed[i] = -self.max_speed[i]
+
+			else:
+				if self.cur_speed[i] > 0:
+					self.cur_speed[i] -= self.dccl[i]
+					if self.cur_speed[i] < self.dccl[i]: self.cur_speed[i] = 0.0
+				elif self.cur_speed[i] < 0:
+					self.cur_speed[i] += self.dccl[i]
+					if self.cur_speed[i] > self.dccl[i]: self.cur_speed[i] = 0.0
+
+			self.move_vector[i] = self.cur_speed[i] * m
+
+		self.vector = Vector2D.AddVectors( self.vector, self.move_vector )
 
 
 	# Fire Energy
@@ -61,6 +81,12 @@ class Player( AnimatedSprite ):
 	# Fire Pulse
 	def FirePulse( self ):
 		pass
+
+
+	# Update
+	def Update( self, frame_time, ticks ):
+		AnimatedSprite.Update( self, frame_time, ticks )
+		self.Move( frame_time )
 
 
 	# Control Mouse Down
@@ -83,6 +109,35 @@ class Player( AnimatedSprite ):
 		pass
 
 
+	# Control Keyboard Down
+	def ControlKeyDown( self, event ):
+		if event.key == self.control_MOVE_UP:
+			self.is_accl[1] = -1
+		elif event.key == self.control_MOVE_RIGHT:
+			self.is_accl[0] = 1
+		elif event.key == self.control_MOVE_DOWN:
+			self.is_accl[1] = 1
+		elif event.key == self.control_MOVE_LEFT:
+			self.is_accl[0] = -1
+
+
+	# Control Keyboard Up
+	def ControlKeyUp( self, event ):
+		if event.key == self.control_MOVE_UP:
+			if self.is_accl[1] == -1:
+				self.is_accl[1] = 0
+		elif event.key == self.control_MOVE_RIGHT:
+			if self.is_accl[0] == 1:
+				self.is_accl[0] = 0
+		elif event.key == self.control_MOVE_DOWN:
+			if self.is_accl[1] == 1:
+				self.is_accl[1] = 0
+		elif event.key == self.control_MOVE_LEFT:
+			if self.is_accl[0] == -1:
+				self.is_accl[0] = 0
+
+
+
 # -------- EnergyParticle --------
 class EnergyParticle( StaticSprite ):
 	pass
@@ -90,13 +145,19 @@ class EnergyParticle( StaticSprite ):
 
 # -------- Keyboard Listener --------
 class KeyboardListener( EventListener ):
-	pass
+	# Notify
+	def Notify( self, event ):
+		if event.name == "Pygame Event":
+			if event.data.type == pygame.KEYDOWN:
+				Config.player.ControlKeyDown( event.data )
+
+			elif event.data.type == pygame.KEYUP:
+				Config.player.ControlKeyUp( event.data )
 
 
 # -------- Mouse Listener ---------
 class MouseListener( EventListener ):
-
-	# Init
+	# Notify
 	def Notify( self, event ):
 		if event.name == "Pygame Event":
 			if event.data.type == pygame.MOUSEBUTTONDOWN:

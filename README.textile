@@ -17,3 +17,4 @@ h2. Tools
 ** "Pygame":http://www.pygame.org/
 * Graphics
 ** "Pickle":http://www.pickleeditor.com/
+** "Gimp":http://www.gimp.org/

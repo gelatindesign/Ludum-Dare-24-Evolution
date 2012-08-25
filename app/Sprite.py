@@ -22,6 +22,10 @@ class StaticSprite( pygame.sprite.Sprite ):
 		self.image = pygame.image.load( src ).convert_alpha( )
 
 
+	# Update
+	def Update( self, frame_time, ticks ):
+		pass
+
 
 # -------- Animated Sprite --------
 class AnimatedSprite( pygame.sprite.Sprite ):
@@ -106,3 +110,8 @@ class AnimatedSprite( pygame.sprite.Sprite ):
 			# Update angle
 			if self.image_angle != False:
 				self.image = pygame.transform.rotate( self.image, self.image_angle )
+
+
+	# Update
+	def Update( self, frame_time, ticks ):
+		self.UpdateAnimation( ticks )

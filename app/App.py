@@ -65,18 +65,22 @@ class App( ):
 	# @param object self
 	# @return object self
 	
-	def Tick( self ):
+	def Tick( self, frame_time ):
 		if self.mode == "Game":
-			self.TickGame( )
+			self.TickGame( frame_time )
 		else:
-			self.TickMenu( )
+			self.TickMenu( frame_time )
 
 
-	def TickGame( self ):
+	def TickGame( self, frame_time ):
 		Config.screen.fill( (0,0,0) )
 
+		for s in self.sprites_all:
+			s.Update( int(frame_time), int(pygame.time.get_ticks()) )
+
 		rects = self.sprites_all.draw( Config.screen )
-		pygame.display.update( rects )
+		#pygame.display.update( rects )
+		pygame.display.flip( )
 
 
 	def TickMenu( self ):
