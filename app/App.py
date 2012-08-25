@@ -1,4 +1,4 @@
-# -------- App.py -----------
+# -------- App.py --------
 # Handles all general application logic, such as rendering either the game or
 # menu and capturing & pushing events
 # ------------------------
@@ -6,11 +6,15 @@
 # Imports
 import pygame, Config
 from Event import EventManager, EventListener
+from Player import Player
 
-# -------- App -----------
+# -------- App --------
 class App( ):
 	running = False
+	mode = 'Game' # temp, default to  menu
 	prefs = None
+	sprite_groups = {}
+
 
 	# Init
 	# Create the app object and set it to running
@@ -35,6 +39,25 @@ class App( ):
 			pref = p.split( " " )
 			self.prefs[ pref[0] ] = pref[1]
 
+		# Set screen width & height
+		Config.screen_w = int( self.prefs["screen_width"] )
+		Config.screen_h = int( self.prefs["screen_height"] )
+
+
+	# Load Game
+	# Bring in all the required assets for the game and initialise starting
+	# objects
+	#
+	# @return None
+
+	def LoadGame( self ):
+		# Create the sprite groups and layers
+		self.sprite_groups['player'] = pygame.sprite.Group( )
+		self.sprites_all = pygame.sprite.LayeredUpdates( )
+
+		# Create the player
+		p = Player( )
+
 
 	# Tick
 	# Process a single tick
@@ -43,10 +66,24 @@ class App( ):
 	# @return object self
 	
 	def Tick( self ):
+		if self.mode == "Game":
+			self.TickGame( )
+		else:
+			self.TickMenu( )
+
+
+	def TickGame( self ):
+		Config.screen.fill( (0,0,0) )
+
+		rects = self.sprites_all.draw( Config.screen )
+		pygame.display.update( rects )
+
+
+	def TickMenu( self ):
 		pass
 
 
-# -------- App Listener -----------
+# -------- App Listener --------
 class AppListener( EventListener ):
 
 	# Init

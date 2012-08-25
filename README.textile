@@ -1,6 +1,8 @@
 h1. Neon Spores
 
-Ludum Dare 24 - Theme: Evolution - www.ludumdare.com/compo/
+Ludum Dare 24
+Theme: Evolution
+www.ludumdare.com/compo/
 
 h2. Gameplay
 
@@ -10,6 +12,8 @@ h2. Preferences
 
 h2. Tools
 
-* "Sublime Text 2":http://www.sublimetext.com/
-* "Pygame":http://www.pygame.org/
-* "Pickle":http://www.pickleeditor.com/
+* Code
+** "Sublime Text 2":http://www.sublimetext.com/
+** "Pygame":http://www.pygame.org/
+* Graphics
+** "Pickle":http://www.pickleeditor.com/

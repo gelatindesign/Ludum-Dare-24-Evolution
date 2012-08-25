@@ -1,11 +1,11 @@
-# -------- Neon Spores -----------
+# -------- Neon Spores --------
 # @compo Ludum Dare 24
 # @theme Evolution
 # @author Gelatin Design, Laurence Roberts
 # @date 25th - 26th August 2012
-# --------------------------------
+# -----------------------------
 
-# -------- Init -----------
+# -------- Init --------
 
 # Load config
 import app.Config
@@ -24,12 +24,17 @@ from app.Event import PygameEvent
 app.Config.app = App( )
 
 # Setup the screen
-app.Config.screen = pygame.display.set_mode( [int(app.Config.app.prefs["screen_width"]), int(app.Config.app.prefs["screen_height"])] )
+app.Config.screen = pygame.display.set_mode( [app.Config.screen_w, app.Config.screen_h] )
 pygame.display.set_caption( app.Config.app_title )
 pygame.display.set_icon( pygame.image.load( "icon.png" ).convert_alpha( ) )
 app.Config.screen.convert( )
 
-# -------- Main Program Loop -----------
+
+# TEMP
+app.Config.app.LoadGame( )
+
+
+# -------- Main Program Loop --------
 while app.Config.app.running:
 
 	# Capture events
@@ -40,5 +45,6 @@ while app.Config.app.running:
 	# Process tick
 	app.Config.app.Tick( )
 
-# -------- Exit -----------
+
+# -------- Exit --------
 pygame.quit( )
