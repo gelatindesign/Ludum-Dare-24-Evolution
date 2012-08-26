@@ -29,6 +29,9 @@ class Player( MovingSprite ):
 	energy_rate = 8 # per second
 	is_firing_energy = False
 	has_fired_energy = False
+
+	has_captured = False
+	captured_plant = None
 	
 	# Init
 	def __init__( self ):
@@ -63,25 +66,33 @@ class Player( MovingSprite ):
 
 	# Fire Energy
 	def FireEnergy( self ):
-		if self.cur_speed[0] >= 0:
-			direction = 1
-		else:
-			direction = -1
+		if self.has_captured == False:
+			if self.cur_speed[0] >= 0:
+				direction = 1
+			else:
+				direction = -1
 
-		# Flip which gun fires the particle
-		self.energy_flip = 1 - self.energy_flip
-		if (self.energy_flip):
-			vector = Vector2D.AddVectors( self.vector, [direction * 20, 9] )
-		else:
-			vector = Vector2D.AddVectors( self.vector, [direction * 20, 19] )
+			# Flip which gun fires the particle
+			self.energy_flip = 1 - self.energy_flip
+			if (self.energy_flip):
+				vector = Vector2D.AddVectors( self.vector, [direction * 20, 9] )
+			else:
+				vector = Vector2D.AddVectors( self.vector, [direction * 20, 19] )
 
-		# Create energy particle
-		EnergyParticle( vector, direction )
+			# Create energy particle
+			EnergyParticle( vector, direction )
 
 
 	# Fire Pulse
 	def FirePulse( self ):
 		pass
+
+
+	# Launch Captured
+	def LaunchCaptured( self ):
+		self.has_captured = False
+		self.captured_plant.captured = False
+		self.captured_plant = None ###
 
 	
 	# Update
@@ -103,7 +114,10 @@ class Player( MovingSprite ):
 			self.is_firing_energy = True
 
 		elif event.button == self.control_FIRE_SECONDARY:
-			self.FirePulse( )
+			if self.has_captured == True:
+				self.LaunchCaptured( )
+			else:
+				self.FirePulse( )
 
 
 	# Control Mouse Up
@@ -168,7 +182,7 @@ class EnergyParticle( StaticSprite ):
 				'event': 'FriendlyPlantEnergyCollisionEvent'
 			},
 			{
-				'group': Config.app.sprite_groups['enemy-bugs'],
+				'group': Config.app.sprite_groups['enemy-flying'],
 				'module': 'Enemy',
 				'event': 'EnemyBugEnergyCollisionEvent'
 			}

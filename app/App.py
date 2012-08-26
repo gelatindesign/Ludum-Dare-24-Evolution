@@ -55,10 +55,15 @@ class App( ):
 		# Create the sprite groups and layers
 		self.sprite_groups['player'] = pygame.sprite.Group( )
 		self.sprite_groups['energy-particles'] = pygame.sprite.Group( )
+
 		self.sprite_groups['friendly-plants'] = pygame.sprite.Group( )
 		self.sprite_groups['friendly-spores'] = pygame.sprite.Group( )
 		self.sprite_groups['friendly-trees'] = pygame.sprite.Group( )
-		self.sprite_groups['enemy-bugs'] = pygame.sprite.Group( )
+
+		self.sprite_groups['enemy-flying'] = pygame.sprite.Group( )
+		self.sprite_groups['enemy-spores'] = pygame.sprite.Group( )
+		self.sprite_groups['enemy-trees'] = pygame.sprite.Group( )
+
 		self.sprites_all = pygame.sprite.LayeredUpdates( )
 
 		# Create the world

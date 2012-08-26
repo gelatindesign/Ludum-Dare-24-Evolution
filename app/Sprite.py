@@ -24,7 +24,7 @@ class Sprite( pygame.sprite.Sprite ):
 				Config.app.em.Post( f( c ) )
 
 	# On Collision
-	def OnCollision( ):
+	def OnCollision( self ):
 		pass
 
 
@@ -95,7 +95,7 @@ class AnimatedSprite( Sprite ):
 		self.states[ name ] = {
 			'start': start,
 			'end': end,
-			'delay': ( 1000 / fps )
+			'delay': ( 1000 / 12 )
 		}
 
 

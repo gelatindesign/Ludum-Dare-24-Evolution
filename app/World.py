@@ -8,6 +8,7 @@ import Config
 from Sprite import StaticSprite
 from Event import EventListener
 from Friendly import FriendlyPlant
+from Enemy import EnemyFlying
 
 
 # -------- World --------
@@ -30,7 +31,7 @@ class World( ):
 	def GenerateTerrain( self, width ):
 		rx = 50
 		ry = Config.screen_h / 20
-		rwater = 10 # % chance of being a water source
+		rwater = 20 # % chance of being a water source
 
 		# Create terrain surface
 		self.terrain = pygame.Surface( (width, Config.screen_h) )
@@ -72,9 +73,6 @@ class World( ):
 
 			x1 = x2
 			y1 = y2
-
-		for i in range(1):
-			FriendlyPlant( )
 
 		ResourcePoint( )
 
@@ -125,3 +123,7 @@ class WorldKeyboardListener( EventListener ):
 			if event.data.type == pygame.KEYDOWN:
 				if event.data.key == pygame.K_t:
 					Config.world.GenerateTerrain( Config.screen_w * Config.world_size )
+				elif event.data.key == pygame.K_e:
+					EnemyFlying( )
+				elif event.data.key == pygame.K_f:
+					FriendlyPlant( )

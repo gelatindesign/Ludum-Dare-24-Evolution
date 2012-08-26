@@ -117,23 +117,29 @@ class FriendlyTree( AnimatedSprite ):
 
 
 	# CapturedByPlayer
-	def CapturedByPlayer( ):
-		if self.level == 2:
+	def CapturedByPlayer( self ):
+		if self.level == 2 and Config.player.has_captured == False:
+			Config.world.SetGroundType( self.vector[0], "water" )
 			self.kill( )
-			plant = FriendlyPlant( )
-			plant.vector = Vector2D.AddVectors( Config.player.vector, [5, 20] )
-			plant.captured = True
+
+			Config.player.captured_plant = FriendlyPlant( )
+			Config.player.captured_plant.vector = Vector2D.AddVectors( Config.player.vector, [5, 20] )
+			Config.player.captured_plant.captured = True
+
+			Config.player.has_captured = True
 
 
 	# Update
 	def Update( self, frame_time, ticks ):
 		m = frame_time / 1000.0
 
-		self.energy += (self.energy_up_rate / m)
+		self.energy += (self.energy_up_rate * m)
 
-		if self.energy > 100:
+		if self.energy > 30:
 			self.level = 2
 			self.ReloadSrc( "friendlies/tree-2.png" )
+
+		AnimatedSprite.Update( self, frame_time, ticks )
 
 
 
@@ -145,6 +151,10 @@ class FriendlyPlant( AnimatedSprite ):
 	energy = 1.0 # level up every 100 energy
 	energy_up_rate = 5
 	captured = False
+	level = 1
+
+	targeted = False
+	targeted_by = None
 
 	# Init
 	def __init__( self ):
@@ -155,7 +165,7 @@ class FriendlyPlant( AnimatedSprite ):
 		# Create as animated sprite
 		AnimatedSprite.__init__(
 			self,
-			"friendlies/friendly-plant-1.png",
+			"friendlies/plant-1.png",
 			[random.randint(100, Config.screen_w - 100), 0]
 		)
 
@@ -172,22 +182,25 @@ class FriendlyPlant( AnimatedSprite ):
 		self.last_spawn = self.spawn_wait
 
 		# Create a friendly spore
-		r = random.randint( 1 + int(self.energy / 20), 1 + int(self.energy / 10) )
+		if self.level == 1:
+			r = 1
+		else:
+			r = random.randint( 1 + int(self.energy / 20), 1 + int(self.energy / 10) )
+
 		for i in range( r ):
 			FriendlySpore( Vector2D.AddVectors(self.vector, [self.rect.w/2, 0]) )
 
 
 	# Increase Energy
 	def IncreaseEnergy( self ):
-		before = self.energy
-		if self.energy < 1000 - self.energy_up_rate:
-			self.energy += self.energy_up_rate
-			if int(self.energy / 200) > int(before / 200):
-				self.level = int(self.energy / 200) + 1
-				if self.level > 3:
-					self.level = 3
-				else:
-					self.ReloadSrc( "friendlies/friendly-plant-"+str(self.level)+".png" )
+		self.energy += self.energy_up_rate
+
+		if self.energy > 100:
+			self.energy = 100
+
+			if self.level == 1:
+				self.level = 2
+				self.ReloadSrc( "friendlies/plant-2.png" )
 
 	# Update
 	def Update( self, frame_time, ticks ):
