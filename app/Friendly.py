@@ -6,13 +6,14 @@
 import random
 import Config, Vector2D
 from Sprite import StaticSprite, AnimatedSprite, MovingSprite
-from Event import EventListener
+from Event import EventListener, Event
 
 # -------- Friendly Spore --------
 class FriendlySpore( AnimatedSprite ):
 	looking = False
 	move_vector = [0,0]
 	speed = 10
+	gravity = 1
 
 	# Init
 	def __init__( self, vector ):
@@ -20,10 +21,10 @@ class FriendlySpore( AnimatedSprite ):
 		self._layer = Config.sprite_layer_friendlies
 
 		AnimatedSprite.__init__( self, "friendlies/spore.png", vector )
-		x = random.randint(1, 4)
+		x = random.random()
 		self.direction = random.randint(0, 1)
 		if self.direction == 0: self.direction = -1
-		y = random.randint(10, 30)
+		y = random.randint(1, 3) + random.random()
 		self.move_vector = [x * self.direction, -y]
 
 		self.AddAnimationState( "idle", 0, 2, 6 )
@@ -38,7 +39,7 @@ class FriendlySpore( AnimatedSprite ):
 
 		if self.looking == False:
 			if self.vector[1] < ground_height - 6:
-				self.move_vector[1] += 1
+				self.move_vector[1] += self.gravity * m
 				self.vector = Vector2D.AddVectors( self.vector, self.move_vector )
 			else:
 				self.looking = True
@@ -49,7 +50,7 @@ class FriendlySpore( AnimatedSprite ):
 			elif self.vector[1] > ground_height - 6:
 				self.vector[1] -= 1
 
-			self.vector[0] += self.speed * m * self.direction
+			self.vector[0] += (self.speed * m * self.direction)
 
 		AnimatedSprite.Update( self, frame_time, ticks )
 
@@ -61,7 +62,7 @@ class FriendlyPlant( AnimatedSprite ):
 	spawn_wait = 10000 # every 10 seconds
 	last_spawn = 0
 	energy = 1.0 # level up every 100 energy
-	energy_up_rate = 5 # every second
+	energy_up_rate = 5
 
 	# Init
 	def __init__( self ):
@@ -72,7 +73,7 @@ class FriendlyPlant( AnimatedSprite ):
 		# Create as animated sprite
 		AnimatedSprite.__init__(
 			self,
-			"friendlies/friendly-bug-1b.png",
+			"friendlies/friendly-bug-1.png",
 			[random.randint(100, Config.screen_w - 100), 0]
 		)
 
@@ -82,6 +83,8 @@ class FriendlyPlant( AnimatedSprite ):
 		self.AddAnimationState( "landing", 11, 15, 4 )
 		self.SetAnimationState( "falling" )
 
+		Config.app.em.RegisterListener( FriendlyPlantEnergyCollisionListener() )
+
 	# Spawn
 	def Spawn( self ):
 		self.last_spawn = self.spawn_wait
@@ -89,14 +92,26 @@ class FriendlyPlant( AnimatedSprite ):
 		# Create a friendly spore
 		r = random.randint( 1 + int(self.energy / 20), 1 + int(self.energy / 10) )
 		for i in range( r ):
-			FriendlySpore( self.vector )
+			FriendlySpore( Vector2D.AddVectors(self.vector, [self.rect.w/2, 0]) )
+
+
+	# Increase Energy
+	def IncreaseEnergy( self ):
+		before = self.energy
+		self.energy += self.energy_up_rate
+		if int(self.energy / 200) > int(before / 200):
+			self.level = int(self.energy / 200) + 1
+			if self.level > 3:
+				self.level = 3
+			else:
+				self.ReloadSrc( "friendlies/friendly-bug-"+str(self.level)+".png" )
 
 	# Update
 	def Update( self, frame_time, ticks ):
 		m = frame_time / 1000.0
 
 		# Set energy level
-		self.energy += (self.energy_up_rate * m)
+		#self.energy += (self.energy_up_rate * m)
 
 		# Get ground height at centre x of bug
 		ground_height, ground_angle = Config.world.GroundInfo( self.vector[0] + (self.rect.w/2) )
@@ -104,8 +119,6 @@ class FriendlyPlant( AnimatedSprite ):
 		# Get bottom of bug
 		#self.image_angle = ground_angle
 		bottom = self.vector[1] + self.rect.h
-
-		#print bottom, ground
 
 		# Check if bug is above the ground
 		if bottom < ground_height - 1:
@@ -118,18 +131,16 @@ class FriendlyPlant( AnimatedSprite ):
 
 			if self.last_spawn <= 0:
 				self.Spawn( )
+				self.energy += self.energy_up_rate
 			else:
 				self.last_spawn -= frame_time
 
 		AnimatedSprite.Update( self, frame_time, ticks )
 
 
-# -------- Friendly Plant Energy Collision --------
-class FriendlyPlantEnergyCollisionEvent( Event ):
-	name = "Friendly Plant Energy Collision Event"
-
+# -------- Friendly Plant Energy Collision Listener --------
 class FriendlyPlantEnergyCollisionListener( EventListener ):
 	# Notify
-	def Notify( event ):
+	def Notify( self, event ):
 		if event.name == "Friendly Plant Energy Collision Event":
-			pass
+			event.data.IncreaseEnergy( )

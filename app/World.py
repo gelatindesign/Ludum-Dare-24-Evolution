@@ -55,11 +55,6 @@ class World( ):
 			angle = math.degrees( math.atan2(delta_y, delta_x) )
 
 			for i in range( x1, x2 ):
-				#ym = y2 - (y2-y1) / (float((x2 - x1)) / float(i))
-
-				#ym = y1 + ((y2 - y1) / (float(x2 - x1) / float(x2 - i))) # * ((x2 - i) / (x2 - x1))
-				#print (float(x2 - x1) / float(x2 - i))
-
 				ym = y1 + ((y2 - y1) * float(float(i - x1) / float(x2 - x1)))
 
 				self.terrain_height.append( ym )
@@ -67,9 +62,7 @@ class World( ):
 
 			x1 = x2
 			y1 = y2
-
-		#self.terrain_array = pygame.surfarray.array2d( self.terrain )
-		#print self.terrain_height
+		
 		for i in range(1):
 			FriendlyPlant( )
 
@@ -78,15 +71,6 @@ class World( ):
 
 	# Get Average World Height
 	def GroundInfo( self, xlook ):
-		'''
-		#print "xlook", xlook
-		for x in self.terrain_array:
-			#print "xfind", x
-			if xlook < x:
-				y = self.terrain_array[x]
-				#print "yfind", x, y
-				return y
-		'''
 		xlook = int( xlook )
 		return self.terrain_height[xlook], self.terrain_angle[xlook]
 

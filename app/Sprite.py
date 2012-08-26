@@ -4,14 +4,32 @@
 
 # Imports
 import pygame
-import Vector2D
+import Vector2D, Event, Config
 
 # Definitions
 folder = "sprites/"
 
 
+# -------- Sprite -------
+class Sprite( pygame.sprite.Sprite ):
+	collide_with = []
+
+	# Check collisions
+	def CheckCollisions( self ):
+		for cw in self.collide_with:
+			collisions = pygame.sprite.spritecollide( self, cw['group'], False )
+			for c in collisions:
+				f = getattr( Event, cw['event'] )
+				self.OnCollision( )
+				Config.app.em.Post( f( c ) )
+
+	# On Collision
+	def OnCollision( ):
+		pass
+
+
 # -------- Static Sprite --------
-class StaticSprite( pygame.sprite.Sprite ):
+class StaticSprite( Sprite ):
 	visible = True
 	image_angle = False
 
@@ -31,10 +49,12 @@ class StaticSprite( pygame.sprite.Sprite ):
 		self.rect.x = self.vector[0]
 		self.rect.y = self.vector[1]
 
+		self.CheckCollisions( )
+
 
 
 # -------- Animated Sprite --------
-class AnimatedSprite( pygame.sprite.Sprite ):
+class AnimatedSprite( Sprite ):
 	loaded = False
 	visible = True
 	image_angle = False
@@ -54,6 +74,19 @@ class AnimatedSprite( pygame.sprite.Sprite ):
 		self._last_update = 0
 		self._frame = 0
 		self.state = ''
+
+
+	# Reload Source
+	def ReloadSrc( self, src ):
+		self.loaded = False
+		self.images = [ ]
+
+		self.src_image = pygame.image.load( folder+src ).convert_alpha( )
+		self.src_width, self.src_height = self.src_image.get_size( )
+
+		state = self.state
+		self.state = ''
+		self.SetAnimationState( state )
 
 
 	# Add Animation State
@@ -120,6 +153,8 @@ class AnimatedSprite( pygame.sprite.Sprite ):
 	# Update
 	def Update( self, frame_time, ticks ):
 		self.UpdateAnimation( ticks )
+
+		self.CheckCollisions( )
 
 
 

@@ -26,6 +26,15 @@ class PygameEvent( Event ):
 	name = "Pygame Event"
 
 
+# -------- CollisionEvent --------
+class CollisionEvent( Event ):
+	name = "Collision Event"
+
+# -------- Friendly Plant Energy Collision --------
+class FriendlyPlantEnergyCollisionEvent( CollisionEvent ):
+	name = "Friendly Plant Energy Collision Event"
+
+
 
 # -------- Event Listener --------
 # Superclass for any event listeners
@@ -69,6 +78,10 @@ class EventManager( ):
 	# @return None
 
 	def RegisterListener( self, listener ):
+		for l in self.listeners:
+			if l.__class__.__name__ == listener.__class__.__name__:
+				return False
+
 		self.listeners.append( listener )
 
 	

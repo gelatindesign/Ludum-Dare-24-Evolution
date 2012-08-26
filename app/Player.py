@@ -141,16 +141,7 @@ class Player( MovingSprite ):
 # -------- EnergyParticle --------
 class EnergyParticle( StaticSprite ):
 	max_speed = [1000.0, 0.0]
-	collide_with = [
-		{
-			'group': Config.app.sprite_groups['friendly-plants'],
-			'event': 'FriendlyPlantEnergyCollisionEvent'
-		},
-		{
-			'group': Config.app.sprite_groups['enemy-bugs'],
-			'event': 'EnemyBugEnergyCollisionEvent'
-		}
-	]
+	
 
 	# Init
 	def __init__( self, vector, direction ):
@@ -161,6 +152,19 @@ class EnergyParticle( StaticSprite ):
 		StaticSprite.__init__( self, "player/energy-particle.png", vector )
 
 		self.direction = direction
+
+		self.collide_with = [
+			{
+				'group': Config.app.sprite_groups['friendly-plants'],
+				'module': 'Friendly',
+				'event': 'FriendlyPlantEnergyCollisionEvent'
+			},
+			{
+				'group': Config.app.sprite_groups['enemy-bugs'],
+				'module': 'Enemy',
+				'event': 'EnemyBugEnergyCollisionEvent'
+			}
+		]
 
 
 	# Update
@@ -177,7 +181,7 @@ class EnergyParticle( StaticSprite ):
 
 
 	# On Collision
-	def OnCollision( ):
+	def OnCollision( self ):
 		self.kill( )
 
 
