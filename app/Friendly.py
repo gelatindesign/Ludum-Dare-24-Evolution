@@ -10,7 +10,7 @@ from Event import EventListener, Event
 
 # -------- Friendly Spore --------
 class FriendlySpore( AnimatedSprite ):
-	speed = 10
+	speed = 40
 	gravity = 1
 
 	# Init
@@ -194,7 +194,7 @@ class FriendlyPlant( AnimatedSprite ):
 			r = random.randint( 1 + int(self.energy / 20), 1 + int(self.energy / 10) )
 
 		for i in range( r ):
-			FriendlySpore( Vector2D.AddVectors(self.GetDrawPos( ), [self.rect.w/2, 0]) )
+			FriendlySpore( Vector2D.AddVectors(self.vector, [self.rect.w/2, 0]) )
 
 
 	# Increase Energy

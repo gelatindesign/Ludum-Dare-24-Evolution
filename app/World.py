@@ -7,7 +7,7 @@ import random, math, pygame
 import Config
 from Sprite import StaticSprite
 from Event import EventListener
-from Friendly import FriendlyPlant
+from Friendly import FriendlyPlant, FriendlyTree
 from Enemy import EnemyTree, EnemyFlying
 
 
@@ -77,6 +77,13 @@ class World( ):
 
 		# Add starting positions
 		FriendlyPlant( )
+		num_trees = 3
+		for x1, x2, xc, ym, t in self.terrain_type:
+			if t == "water":
+				num_trees -= 1
+				tree = FriendlyTree( [xc, ym - 80] )
+				if num_trees == 0:
+					break;
 
 		num_trees = 6
 		for x1, x2, xc, ym, t in reversed( self.terrain_type ):
@@ -85,6 +92,7 @@ class World( ):
 				tree = EnemyTree( [xc, ym - 80] )
 				tree.level = 2
 				tree.energy = 30
+				tree.last_spawn = 0
 				if num_trees == 0:
 					break;
 

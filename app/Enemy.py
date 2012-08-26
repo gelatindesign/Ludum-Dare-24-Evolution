@@ -23,14 +23,15 @@ class EnemySpore( AnimatedSprite ):
 		self._layer = Config.sprite_layer_enemies
 
 		AnimatedSprite.__init__( self, "enemies/spore.png", vector )
+
+		self.AddAnimationState( "idle", 0, 2, 6 )
+		self.SetAnimationState( "idle" )
+
 		x = random.randint(0, 1) + random.random()
 		self.direction = random.randint(0, 1)
 		if self.direction == 0: self.direction = -1
 		y = 1 + random.random()
 		self.move_vector = [x * self.direction, -y]
-
-		self.AddAnimationState( "idle", 0, 2, 6 )
-		self.SetAnimationState( "idle" )
 
 		self.collide_with = [
 			{
@@ -93,6 +94,13 @@ class EnemySpore( AnimatedSprite ):
 	def Update( self, frame_time, ticks ):
 		m = frame_time / 1000.0
 
+		if self.vector[0] <= 0:
+			self.direction = -self.direction
+			self.vector[0] = 0
+		elif self.vector[0] >= Config.screen_w * Config.world_size:
+			self.direction = -self.direction
+			self.vector[0] = Config.screen_w * Config.world_size 
+
 		# Get ground height
 		ground_height, ground_angle = Config.world.GroundInfo( self.vector[0] )
 
@@ -127,7 +135,7 @@ class EnemySpore( AnimatedSprite ):
 # -------- Enemy Tree --------
 class EnemyTree( AnimatedSprite ):
 	energy_up_rate = 1
-	spawn_wait = 6000 # 6 seconds
+	spawn_wait = 12000 # 6 seconds
 	
 
 	# Init
@@ -160,7 +168,8 @@ class EnemyTree( AnimatedSprite ):
 		if self.level == 2:
 			if self.last_spawn <= 0:
 				self.last_spawn = self.spawn_wait
-				for i in range(int(self.energy / 30)):
+				r = 1 + int(self.energy / 60)
+				for i in range(r):
 					EnemyFlying( self.vector )
 			else:
 				self.last_spawn -= frame_time
@@ -190,17 +199,17 @@ class EnemyFlying( MovingSprite ):
 			vector
 		)
 
-		direction = 1
-		if random.randint(0,1): direction = -1
+		self.direction = 1
+		if random.randint(0,1): self.direction = -1
 
-		self.cur_speed 	= [direction * float(random.randint(0, 600)), -float(random.randint(500, 800))]
+		self.cur_speed 	= [self.direction * float(random.randint(0, 600)), -float(random.randint(500, 800))]
 		self.is_accl 	= [0, 0]
 		self.move_vector = [0, 0]
 		self.spawning = False
 		self.last_spawn = 0
 		self.target = False
-		self.level = 1
-		self.health = 5
+		self.level = -1
+		self.health = 3
 
 		self.AddAnimationState( "flying", 0, 5, 12 )
 		self.SetAnimationState( "flying" )
@@ -223,7 +232,7 @@ class EnemyFlying( MovingSprite ):
 
 		if self.target == False:
 			# Roam
-			self.is_accl[0] = 0
+			self.is_accl[0] = self.direction
 
 		else:
 			if self.target.targeted and self.target.targeted_by != self:
@@ -249,8 +258,24 @@ class EnemyFlying( MovingSprite ):
 	def Spawn( self ):
 		r = self.level * 5
 		for i in range( r ):
-			EnemySpore( Vector2D.AddVectors(self.GetDrawPos( ), [self.rect.w/2, 0]) )
+			EnemySpore( Vector2D.AddVectors(self.vector, [self.rect.w/2, 0]) )
 
+		# Level up
+		self.level += 1
+		if self.level > 7:
+			self.level = 7
+		else:
+			if self.level > 1:
+				self.health = self.level * 3
+				self.ReloadSrc( "enemies/flying-"+str(self.level)+".png" )
+
+	# Die Overly Dramtically
+	def DieOverlyDramatically( self ):
+		self.Spawn( )
+		if self.target:
+			self.target.targeted = False
+			self.target.targeted_by = None
+		self.kill( )
 
 	# Update
 	def Update( self, frame_time, ticks ):
@@ -260,5 +285,10 @@ class EnemyFlying( MovingSprite ):
 			self.is_accl[1] = 1
 		else:
 			self.is_accl[1] = 0
+
+		if self.vector[0] <= 40:
+			self.direction = 1
+		elif self.vector[0] >= (Config.screen_w * Config.world_size) - 40:
+			self.direction = -1
 
 		self.MoveToNearestFriendlyPlant( frame_time )

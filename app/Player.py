@@ -215,6 +215,11 @@ class EnergyParticle( StaticSprite ):
 
 	# On Collision
 	def OnCollision( self, c ):
+		if c.__class__.__name__ == "EnemyFlying":
+			c.health -= 1
+			if c.health <= 0:
+				c.DieOverlyDramatically( )
+
 		self.kill( )
 
 
