@@ -163,7 +163,7 @@ class FriendlyPlant( AnimatedSprite ):
 		AnimatedSprite.__init__(
 			self,
 			"friendlies/plant-1.png",
-			[random.randint(100, Config.screen_w - 100), 0]
+			[random.randint(100, random.randint(300, Config.screen_w - 300)), 0]
 		)
 
 		self.last_spawn = 0
@@ -194,7 +194,7 @@ class FriendlyPlant( AnimatedSprite ):
 			r = random.randint( 1 + int(self.energy / 20), 1 + int(self.energy / 10) )
 
 		for i in range( r ):
-			FriendlySpore( Vector2D.AddVectors(self.vector, [self.rect.w/2, 0]) )
+			FriendlySpore( Vector2D.AddVectors(self.GetDrawPos( ), [self.rect.w/2, 0]) )
 
 
 	# Increase Energy

@@ -127,6 +127,7 @@ class EnemySpore( AnimatedSprite ):
 # -------- Enemy Tree --------
 class EnemyTree( AnimatedSprite ):
 	energy_up_rate = 1
+	spawn_wait = 6000 # 6 seconds
 	
 
 	# Init
@@ -138,8 +139,9 @@ class EnemyTree( AnimatedSprite ):
 
 		self.level = 1
 		self.energy = 1.0
+		self.last_spawn = self.spawn_wait
 
-		self.AddAnimationState( "idle", 0, 11, 6 )
+		self.AddAnimationState( "idle", 0, 5, 6 )
 		self.SetAnimationState( "idle" )
 
 		#Config.app.em.RegisterListener( FriendlyTreePlayerCollisionListener() )
@@ -155,6 +157,14 @@ class EnemyTree( AnimatedSprite ):
 			self.level = 2
 			self.ReloadSrc( "enemies/tree-2.png" )
 
+		if self.level == 2:
+			if self.last_spawn <= 0:
+				self.last_spawn = self.spawn_wait
+				for i in range(int(self.energy / 30)):
+					EnemyFlying( self.vector )
+			else:
+				self.last_spawn -= frame_time
+
 		AnimatedSprite.Update( self, frame_time, ticks )
 
 
@@ -163,12 +173,12 @@ class EnemyTree( AnimatedSprite ):
 # -------- Enemy Flying --------
 class EnemyFlying( MovingSprite ):
 	max_speed 	= [300.0, 200.0] # Pixels per second
-	accl 		= [10.0, 20.0] # Change per second
-	dccl		= [5.0, 10.0]
-	spawn_wait = 6000 # Every 6 seconds
+	accl 		= [10.0, 5.0] # Change per second
+	dccl		= [5.0, 5.0]
+	spawn_wait = 10000 # Every 10 seconds
 
 	# Init
-	def __init__( self ):
+	def __init__( self, vector ):
 		# Set groups & layer
 		self.groups = Config.app.sprite_groups['enemy-flying'], Config.app.sprites_all
 		self._layer = Config.sprite_layer_enemies
@@ -177,16 +187,20 @@ class EnemyFlying( MovingSprite ):
 		MovingSprite.__init__(
 			self,
 			"enemies/flying-1.png",
-			[Config.screen_w - 50, random.randint(50,150)]
+			vector
 		)
 
-		self.cur_speed 	= [0.0, 0.0]
+		direction = 1
+		if random.randint(0,1): direction = -1
+
+		self.cur_speed 	= [direction * float(random.randint(0, 600)), -float(random.randint(500, 800))]
 		self.is_accl 	= [0, 0]
 		self.move_vector = [0, 0]
 		self.spawning = False
 		self.last_spawn = 0
 		self.target = False
 		self.level = 1
+		self.health = 5
 
 		self.AddAnimationState( "flying", 0, 5, 12 )
 		self.SetAnimationState( "flying" )
@@ -203,7 +217,7 @@ class EnemyFlying( MovingSprite ):
 	# Move To Nearest Friendly Plant
 	def MoveToNearestFriendlyPlant( self, frame_time ):
 		m = frame_time / 1000.0
-		print ""
+		
 		if self.target == False:
 			self.target = self.FindNearestFriendlyPlant( )
 
@@ -235,105 +249,16 @@ class EnemyFlying( MovingSprite ):
 	def Spawn( self ):
 		r = self.level * 5
 		for i in range( r ):
-			EnemySpore( Vector2D.AddVectors(self.vector, [self.rect.w/2, 0]) )
+			EnemySpore( Vector2D.AddVectors(self.GetDrawPos( ), [self.rect.w/2, 0]) )
 
 
 	# Update
 	def Update( self, frame_time, ticks ):
 		MovingSprite.Update( self, frame_time, ticks )
+
+		if self.vector[1] < random.randint(25,80):
+			self.is_accl[1] = 1
+		else:
+			self.is_accl[1] = 0
+
 		self.MoveToNearestFriendlyPlant( frame_time )
-
-
-
-
-# -------- Enemy Plant --------
-'''class EnemyPlant( AnimatedSprite ):
-	gravity = 400.0 # fall pixels per second
-	spawn_wait = 10000 # every 10 seconds
-	last_spawn = 0
-	energy = 1.0 # level up every 100 energy
-	energy_up_rate = 5
-	captured = False
-	level = 1
-
-	# Init
-	def __init__( self ):
-		# Set groups & layer
-		self.groups = Config.app.sprite_groups['enemy-plants'], Config.app.sprites_all
-		self._layer = Config.sprite_layer_enemies
-
-		# Create as animated sprite
-		AnimatedSprite.__init__(
-			self,
-			"enemies/plant-1.png",
-			[random.randint(300, Config.screen_w - 100), 0]
-		)
-
-		self.AddAnimationState( "eating", 0, 3, 4 )
-		#self.AddAnimationState( "jumping", 4, 9, 4 )
-		#self.AddAnimationState( "falling", 10, 10, 1 )
-		#self.AddAnimationState( "landing", 11, 15, 4 )
-		self.SetAnimationState( "eating" )
-
-		Config.app.em.RegisterListener( FriendlyPlantEnergyCollisionListener() )
-
-	# Spawn
-	def Spawn( self ):
-		self.last_spawn = self.spawn_wait
-
-		# Create a friendly spore
-		if self.level == 1:
-			r = 1
-		else:
-			r = random.randint( 1 + int(self.energy / 20), 1 + int(self.energy / 10) )
-
-		for i in range( r ):
-			FriendlySpore( Vector2D.AddVectors(self.vector, [self.rect.w/2, 0]) )
-
-
-	# Increase Energy
-	def IncreaseEnergy( self ):
-		self.energy += self.energy_up_rate
-
-		if self.energy > 100:
-			self.energy = 100
-
-			if self.level == 1:
-				self.level = 2
-				self.ReloadSrc( "enemies/plant-2.png" )
-
-	# Update
-	def Update( self, frame_time, ticks ):
-		m = frame_time / 1000.0
-
-		if self.captured:
-			self.vector = Vector2D.AddVectors( Config.player.vector, [5, 20] )
-
-		else:
-
-			# Set energy level
-			#self.energy += (self.energy_up_rate * m)
-
-			# Get ground height at centre x of bug
-			ground_height, ground_angle = Config.world.GroundInfo( self.vector[0] + (self.rect.w/2) )
-
-			# Get bottom of bug
-			#self.image_angle = ground_angle
-			bottom = self.vector[1] + self.rect.h
-
-			# Check if bug is above the ground
-			if bottom < ground_height - 1:
-				self.vector = Vector2D.AddVectors( self.vector, [0, self.gravity * m] )
-
-			elif bottom > ground_height:
-				self.vector = Vector2D.SubtractVectors( self.vector, [0, 1] )
-			else:
-				self.SetAnimationState( "eating" )
-
-				if self.last_spawn <= 0:
-					self.Spawn( )
-					self.energy += self.energy_up_rate
-				else:
-					self.last_spawn -= frame_time
-
-		AnimatedSprite.Update( self, frame_time, ticks )'''

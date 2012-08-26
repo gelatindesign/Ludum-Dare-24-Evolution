@@ -14,6 +14,7 @@ sprite_layer_terrain = 4
 
 # World
 world_size = 4
+world_offset = 0
 
 # Shared Objects
 app = None

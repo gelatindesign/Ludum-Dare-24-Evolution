@@ -14,6 +14,10 @@ folder = "sprites/"
 class Sprite( pygame.sprite.Sprite ):
 	collide_with = []
 
+	# Init
+	def __init__( self ):
+		pygame.sprite.Sprite.__init__( self, self.groups )
+
 	# Check collisions
 	def CheckCollisions( self ):
 		for cw in self.collide_with:
@@ -28,6 +32,16 @@ class Sprite( pygame.sprite.Sprite ):
 		pass
 
 
+	# Get Draw Pos
+	def GetDrawPos( self, i=None ):
+		if i == None:
+			return Vector2D.AddVectors( self.vector, [Config.world_offset, 0] )
+		elif i == 0:
+			return self.vector[i] + Config.world_offset
+		elif i == 1:
+			return self.vector[i]
+
+
 # -------- Static Sprite --------
 class StaticSprite( Sprite ):
 	visible = True
@@ -35,19 +49,19 @@ class StaticSprite( Sprite ):
 
 	# Init
 	def __init__( self, src, vector ):
-		pygame.sprite.Sprite.__init__( self, self.groups )
+		Sprite.__init__( self )
 
 		self.vector = vector
 		self.image = pygame.image.load( folder+src ).convert_alpha( )
 		self.rect = self.image.get_rect( )
-		self.rect.x = vector[0]
-		self.rect.y = vector[1]
+		self.rect.x = self.GetDrawPos(0)
+		self.rect.y = self.GetDrawPos(1)
 
 
 	# Update
 	def Update( self, frame_time, ticks ):
-		self.rect.x = self.vector[0]
-		self.rect.y = self.vector[1]
+		self.rect.x = self.GetDrawPos(0)
+		self.rect.y = self.GetDrawPos(1)
 
 		self.CheckCollisions( )
 
@@ -61,7 +75,7 @@ class AnimatedSprite( Sprite ):
 
 	# Init
 	def __init__( self, src, vector ):
-		pygame.sprite.Sprite.__init__( self, self.groups )
+		Sprite.__init__( self )
 
 		self.images = [ ]
 		self.frames = 0
@@ -113,8 +127,8 @@ class AnimatedSprite( Sprite ):
 				# Set image
 				self.image = self.images[0]
 				self.rect = self.image.get_rect( )
-				self.rect.x = self.vector[0]
-				self.rect.y = self.vector[1]
+				self.rect.x = self.GetDrawPos(0)
+				self.rect.y = self.GetDrawPos(1)
 
 			# Set state
 			self.state = name
@@ -128,8 +142,8 @@ class AnimatedSprite( Sprite ):
 		state = self.states[self.state]
 
 		# Update vector position
-		self.rect.x = self.vector[0]
-		self.rect.y = self.vector[1]
+		self.rect.x = self.GetDrawPos(0) #self.vector[0]
+		self.rect.y = self.GetDrawPos(1)
 
 		# Check if enough ticks have passed to update animation
 		if ticks - self._last_update > state['delay']:

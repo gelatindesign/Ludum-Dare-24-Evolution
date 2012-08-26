@@ -92,11 +92,13 @@ class Player( MovingSprite ):
 	def LaunchCaptured( self ):
 		self.has_captured = False
 		self.captured_plant.captured = False
-		self.captured_plant = None ###
+		self.captured_plant = None
 
 	
 	# Update
 	def Update( self, frame_time, ticks ):
+		m = frame_time / 1000.0
+
 		if self.is_firing_energy:
 			if self.has_fired_energy <= 0:
 				self.FireEnergy( )
@@ -104,6 +106,15 @@ class Player( MovingSprite ):
 
 		if self.has_fired_energy > 0:
 			self.has_fired_energy -= frame_time
+
+
+		if self.cur_speed[0] < 0:
+			if self.GetDrawPos(0) < Config.screen_move_x and self.vector[0] >= Config.screen_move_x:
+				Config.world_offset -= (self.cur_speed[0] * m)
+
+		elif self.cur_speed[0] > 0:
+			if self.GetDrawPos(0) > Config.screen_w - Config.screen_move_x and self.vector[0] <= (Config.screen_w * Config.world_size) - Config.screen_move_x:
+				Config.world_offset -= (self.cur_speed[0] * m)
 
 		MovingSprite.Update( self, frame_time, ticks )
 
@@ -184,7 +195,7 @@ class EnergyParticle( StaticSprite ):
 			{
 				'group': Config.app.sprite_groups['enemy-flying'],
 				'module': 'Enemy',
-				'event': 'EnemyBugEnergyCollisionEvent'
+				'event': 'EnemyFlyingEnergyCollisionEvent'
 			}
 		]
 

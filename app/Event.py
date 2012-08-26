@@ -38,6 +38,9 @@ class FriendlyPlantEnergyCollisionEvent( CollisionEvent ):
 class FriendlyTreePlayerCollisionEvent( CollisionEvent ):
 	name = "Friendly Tree Player Collision Event"
 
+# -------- Enemy Flying Energy Collision --------
+class EnemyFlyingEnergyCollisionEvent ( CollisionEvent ):
+	name = "Enemy Flying Energy Collision Event"
 
 
 # -------- Event Listener --------

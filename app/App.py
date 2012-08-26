@@ -44,6 +44,8 @@ class App( ):
 		Config.screen_w = int( self.prefs["screen_width"] )
 		Config.screen_h = int( self.prefs["screen_height"] )
 
+		Config.screen_move_x = int( Config.screen_w * 0.4 )
+
 
 	# Load Game
 	# Bring in all the required assets for the game and initialise starting
@@ -93,7 +95,7 @@ class App( ):
 		Config.screen.fill( (0,0,0) )
 
 		# Get terrain
-		Config.screen.blit( Config.world.terrain, (0, 0) )
+		Config.screen.blit( Config.world.terrain, (Config.world_offset, 0) )
 
 		# Update sprites
 		for s in self.sprites_all:

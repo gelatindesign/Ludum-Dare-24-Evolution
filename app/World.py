@@ -8,7 +8,7 @@ import Config
 from Sprite import StaticSprite
 from Event import EventListener
 from Friendly import FriendlyPlant
-from Enemy import EnemyFlying
+from Enemy import EnemyTree, EnemyFlying
 
 
 # -------- World --------
@@ -47,6 +47,7 @@ class World( ):
 			y2 = random.randint( y1-ry, y1+ry )
 
 			if y2 > Config.screen_h - ry: y2 = Config.screen_h - ry
+			if y2 < ry: y2 = ry
 
 			if random.randint( 0, 100 ) <= rwater:
 				terrain_type = 'water'
@@ -74,7 +75,18 @@ class World( ):
 			x1 = x2
 			y1 = y2
 
-		ResourcePoint( )
+		# Add starting positions
+		FriendlyPlant( )
+
+		num_trees = 6
+		for x1, x2, xc, ym, t in reversed( self.terrain_type ):
+			if t == "water":
+				num_trees -= 1
+				tree = EnemyTree( [xc, ym - 80] )
+				tree.level = 2
+				tree.energy = 30
+				if num_trees == 0:
+					break;
 
 
 	# Get Ground Height and Angle
@@ -124,6 +136,6 @@ class WorldKeyboardListener( EventListener ):
 				if event.data.key == pygame.K_t:
 					Config.world.GenerateTerrain( Config.screen_w * Config.world_size )
 				elif event.data.key == pygame.K_e:
-					Config.enemies.append( EnemyFlying( ) )
+					EnemyFlying( [400, Config.screen_h - 50] )
 				elif event.data.key == pygame.K_f:
 					FriendlyPlant( )
