@@ -10,9 +10,6 @@ from Event import EventListener, Event
 
 # -------- Friendly Spore --------
 class FriendlySpore( AnimatedSprite ):
-	looking = False
-	growing = False
-	move_vector = [0,0]
 	speed = 10
 	gravity = 1
 
@@ -22,6 +19,11 @@ class FriendlySpore( AnimatedSprite ):
 		self._layer = Config.sprite_layer_friendlies
 
 		AnimatedSprite.__init__( self, "friendlies/spore.png", vector )
+
+		self.looking = False
+		self.growing = False
+		self.move_vector = [0,0]
+
 		x = random.random()
 		self.direction = random.randint(0, 1)
 		if self.direction == 0: self.direction = -1
@@ -99,9 +101,7 @@ class FriendlySpore( AnimatedSprite ):
 
 # -------- Friendly Tree --------
 class FriendlyTree( AnimatedSprite ):
-	energy = 1.0
 	energy_up_rate = 1
-	level = 1
 
 	# Init
 	def __init__( self, vector ):
@@ -109,6 +109,9 @@ class FriendlyTree( AnimatedSprite ):
 		self._layer = Config.sprite_layer_friendlies
 
 		AnimatedSprite.__init__( self, "friendlies/tree-1.png", vector )
+
+		self.energy = 1.0
+		self.level = 1
 
 		self.AddAnimationState( "idle", 0, 11, 6 )
 		self.SetAnimationState( "idle" )
@@ -147,14 +150,8 @@ class FriendlyTree( AnimatedSprite ):
 class FriendlyPlant( AnimatedSprite ):
 	gravity = 400.0 # fall pixels per second
 	spawn_wait = 10000 # every 10 seconds
-	last_spawn = 0
-	energy = 1.0 # level up every 100 energy
 	energy_up_rate = 5
-	captured = False
-	level = 1
-
-	targeted = False
-	targeted_by = None
+	
 
 	# Init
 	def __init__( self ):
@@ -168,6 +165,15 @@ class FriendlyPlant( AnimatedSprite ):
 			"friendlies/plant-1.png",
 			[random.randint(100, Config.screen_w - 100), 0]
 		)
+
+		self.last_spawn = 0
+		self.energy = 1.0 # level up every 100 energy
+		self.level = 1
+
+		self.captured = False
+
+		self.targeted = False
+		self.targeted_by = None
 
 		self.AddAnimationState( "eating", 0, 3, 4 )
 		#self.AddAnimationState( "jumping", 4, 9, 4 )

@@ -20,11 +20,11 @@ class Sprite( pygame.sprite.Sprite ):
 			collisions = pygame.sprite.spritecollide( self, cw['group'], False )
 			for c in collisions:
 				f = getattr( Event, cw['event'] )
-				self.OnCollision( )
+				self.OnCollision( c )
 				Config.app.em.Post( f( c ) )
 
 	# On Collision
-	def OnCollision( self ):
+	def OnCollision( self, c ):
 		pass
 
 

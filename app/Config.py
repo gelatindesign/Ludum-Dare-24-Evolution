@@ -20,3 +20,5 @@ app = None
 screen = None
 player = None
 world = None
+
+enemies = []

@@ -203,7 +203,7 @@ class EnergyParticle( StaticSprite ):
 
 
 	# On Collision
-	def OnCollision( self ):
+	def OnCollision( self, c ):
 		self.kill( )
 
 

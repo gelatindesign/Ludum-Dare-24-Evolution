@@ -124,6 +124,6 @@ class WorldKeyboardListener( EventListener ):
 				if event.data.key == pygame.K_t:
 					Config.world.GenerateTerrain( Config.screen_w * Config.world_size )
 				elif event.data.key == pygame.K_e:
-					EnemyFlying( )
+					Config.enemies.append( EnemyFlying( ) )
 				elif event.data.key == pygame.K_f:
 					FriendlyPlant( )
