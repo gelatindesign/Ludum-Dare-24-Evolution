@@ -14,25 +14,29 @@ from Friendly import FriendlyPlant
 class World( ):
 	terrain_height = []
 	terrain_angle = []
+	terrain_type = []
+	colour = {}
 
 	# Init
 	def __init__( self ):
 		Config.app.em.RegisterListener( WorldKeyboardListener() )
+
+		self.colour['dirt'] = (255, 200, 0)
+		self.colour['water'] = (0, 200, 255)
+		self.colour['friendly'] = (140, 255, 0)
 
 
 	# Generate Terrain
 	def GenerateTerrain( self, width ):
 		rx = 50
 		ry = Config.screen_h / 20
-		rwater = 1 # % chance of being a water source
+		rwater = 10 # % chance of being a water source
 
 		# Create terrain surface
 		self.terrain = pygame.Surface( (width, Config.screen_h) )
 		self.terrain_height = []
 		self.terrain_angle = []
-
-		colour_dirt = (255, 200, 0)
-		colour_water = (0, 200, 255)
+		self.terrain_type = []
 
 		w = 0
 		x1 = x2 = 0
@@ -44,15 +48,21 @@ class World( ):
 			if y2 > Config.screen_h - ry: y2 = Config.screen_h - ry
 
 			if random.randint( 0, 100 ) <= rwater:
-				pygame.draw.line( self.terrain, colour_water, (x1, y1), (x2, y2) )
-				pygame.draw.line( self.terrain, colour_water, (x1, y1+1), (x2, y2+1) )
-				pygame.draw.line( self.terrain, colour_water, (x1, y1+2), (x2, y2+2) )
+				terrain_type = 'water'
+				pygame.draw.line( self.terrain, self.colour['water'], (x1, y1), (x2, y2) )
+				pygame.draw.line( self.terrain, self.colour['water'], (x1, y1+1), (x2, y2+1) )
+				pygame.draw.line( self.terrain, self.colour['water'], (x1, y1+2), (x2, y2+2) )
 			else:
-				pygame.draw.line( self.terrain, colour_dirt, (x1, y1), (x2, y2) )
+				terrain_type = 'dirt'
+				pygame.draw.line( self.terrain, self.colour['dirt'], (x1, y1), (x2, y2) )
 
 			delta_y = y1 - y2
 			delta_x = x2 - x1
 			angle = math.degrees( math.atan2(delta_y, delta_x) )
+
+			xc = x1 + ((x2 - x1) / 2 )
+			ym = y1 + ((y2 - y1) / 2 )
+			self.terrain_type.append( (x1, x2, xc, ym, terrain_type) )
 
 			for i in range( x1, x2 ):
 				ym = y1 + ((y2 - y1) * float(float(i - x1) / float(x2 - x1)))
@@ -62,17 +72,40 @@ class World( ):
 
 			x1 = x2
 			y1 = y2
-		
+
 		for i in range(1):
 			FriendlyPlant( )
 
 		ResourcePoint( )
 
 
-	# Get Average World Height
+	# Get Ground Height and Angle
 	def GroundInfo( self, xlook ):
 		xlook = int( xlook )
 		return self.terrain_height[xlook], self.terrain_angle[xlook]
+
+
+	# Get Ground Type
+	def GroundType( self, xlook ):
+		xlook = int( xlook )
+		for x1, x2, xc, ym, t in self.terrain_type:
+			if x1 <= xlook and x2 >= xlook:
+				return xc, ym, t
+		return 0, 0, ''
+		#return self.terrain_type[xlook]
+
+
+	# Set Ground Type
+	def SetGroundType( self, xlook, new_type ):
+		xlook = int( xlook )
+		i = 0
+		for x1, x2, xc, ym, t in self.terrain_type:
+			if x1 <= xlook and x2 >= xlook:
+				self.terrain_type[i] = x1, x2, xc, ym, new_type
+				#pygame.draw.line( self.terrain, self.colour[t], (x1, y1), (x2, y2) )
+				#pygame.draw.line( self.terrain, self.colour[t], (x1, y1+1), (x2, y2+1) )
+				#pygame.draw.line( self.terrain, self.colour[t], (x1, y1+2), (x2, y2+2) )
+			i += 1	
 
 
 # -------- ResourcePoint --------

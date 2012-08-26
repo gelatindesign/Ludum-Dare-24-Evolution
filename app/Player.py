@@ -50,6 +50,14 @@ class Player( MovingSprite ):
 		Config.app.em.RegisterListener( PlayerMouseListener() )
 		Config.app.em.RegisterListener( PlayerKeyboardListener() )
 
+		self.collide_with = [
+			{
+				'group': Config.app.sprite_groups['friendly-trees'],
+				'module': 'Friendly',
+				'event': 'FriendlyTreePlayerCollisionEvent'
+			},
+		]
+
 		Config.player = self
 
 

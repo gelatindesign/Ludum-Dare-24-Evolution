@@ -11,6 +11,7 @@ from Event import EventListener, Event
 # -------- Friendly Spore --------
 class FriendlySpore( AnimatedSprite ):
 	looking = False
+	growing = False
 	move_vector = [0,0]
 	speed = 10
 	gravity = 1
@@ -30,6 +31,38 @@ class FriendlySpore( AnimatedSprite ):
 		self.AddAnimationState( "idle", 0, 2, 6 )
 		self.SetAnimationState( "idle" )
 
+
+	# Check On Water
+	def CheckOnWater( self ):
+		if self.looking == True and self.growing == False:
+			xc, ym, terrain = Config.world.GroundType( self.vector[0] )
+			if terrain == 'water':
+				self.growing = True
+
+				# Move to center of water hole
+				self.vector[0] = xc
+				self.vector[1] = ym
+
+				# Stack on top of other spores
+				height = 0
+				spores = [self]
+				base = self.vector
+				for spore in Config.app.sprite_groups['friendly-spores']:
+					if spore != self and spore.vector[0] == self.vector[0]:
+						height += 1
+						spores.append(spore)
+						self.vector[1] -= 8
+
+				# If tall enough, kill spores and convert to tree
+				if height > 9:
+					for spore in spores:
+						spore.kill( )
+
+					FriendlyTree( base )
+
+					Config.world.SetGroundType( self.vector[0], "friendly" )
+
+
 	# Update
 	def Update( self, frame_time, ticks ):
 		m = frame_time / 1000.0
@@ -37,14 +70,20 @@ class FriendlySpore( AnimatedSprite ):
 		# Get ground height
 		ground_height, ground_angle = Config.world.GroundInfo( self.vector[0] )
 
-		if self.looking == False:
+		if self.growing == True:
+			# Found water and growing
+			pass
+
+		elif self.looking == False:
+			# In the air
 			if self.vector[1] < ground_height - 6:
 				self.move_vector[1] += self.gravity * m
 				self.vector = Vector2D.AddVectors( self.vector, self.move_vector )
 			else:
 				self.looking = True
 
-		if self.looking == True:
+		elif self.looking == True:
+			# Moving on the ground
 			if self.vector[1] < ground_height - 6:
 				self.vector[1] += 1
 			elif self.vector[1] > ground_height - 6:
@@ -52,7 +91,49 @@ class FriendlySpore( AnimatedSprite ):
 
 			self.vector[0] += (self.speed * m * self.direction)
 
+		self.CheckOnWater( )
+
 		AnimatedSprite.Update( self, frame_time, ticks )
+
+
+
+# -------- Friendly Tree --------
+class FriendlyTree( AnimatedSprite ):
+	energy = 1.0
+	energy_up_rate = 1
+	level = 1
+
+	# Init
+	def __init__( self, vector ):
+		self.groups = Config.app.sprite_groups['friendly-trees'], Config.app.sprites_all
+		self._layer = Config.sprite_layer_friendlies
+
+		AnimatedSprite.__init__( self, "friendlies/tree-1.png", vector )
+
+		self.AddAnimationState( "idle", 0, 11, 6 )
+		self.SetAnimationState( "idle" )
+
+		Config.app.em.RegisterListener( FriendlyTreePlayerCollisionListener() )
+
+
+	# CapturedByPlayer
+	def CapturedByPlayer( ):
+		if self.level == 2:
+			self.kill( )
+			plant = FriendlyPlant( )
+			plant.vector = Vector2D.AddVectors( Config.player.vector, [5, 20] )
+			plant.captured = True
+
+
+	# Update
+	def Update( self, frame_time, ticks ):
+		m = frame_time / 1000.0
+
+		self.energy += (self.energy_up_rate / m)
+
+		if self.energy > 100:
+			self.level = 2
+			self.ReloadSrc( "friendlies/tree-2.png" )
 
 
 
@@ -63,6 +144,7 @@ class FriendlyPlant( AnimatedSprite ):
 	last_spawn = 0
 	energy = 1.0 # level up every 100 energy
 	energy_up_rate = 5
+	captured = False
 
 	# Init
 	def __init__( self ):
@@ -73,15 +155,15 @@ class FriendlyPlant( AnimatedSprite ):
 		# Create as animated sprite
 		AnimatedSprite.__init__(
 			self,
-			"friendlies/friendly-bug-1.png",
+			"friendlies/friendly-plant-1.png",
 			[random.randint(100, Config.screen_w - 100), 0]
 		)
 
 		self.AddAnimationState( "eating", 0, 3, 4 )
-		self.AddAnimationState( "jumping", 4, 9, 4 )
-		self.AddAnimationState( "falling", 10, 10, 1 )
-		self.AddAnimationState( "landing", 11, 15, 4 )
-		self.SetAnimationState( "falling" )
+		#self.AddAnimationState( "jumping", 4, 9, 4 )
+		#self.AddAnimationState( "falling", 10, 10, 1 )
+		#self.AddAnimationState( "landing", 11, 15, 4 )
+		self.SetAnimationState( "eating" )
 
 		Config.app.em.RegisterListener( FriendlyPlantEnergyCollisionListener() )
 
@@ -98,44 +180,52 @@ class FriendlyPlant( AnimatedSprite ):
 	# Increase Energy
 	def IncreaseEnergy( self ):
 		before = self.energy
-		self.energy += self.energy_up_rate
-		if int(self.energy / 200) > int(before / 200):
-			self.level = int(self.energy / 200) + 1
-			if self.level > 3:
-				self.level = 3
-			else:
-				self.ReloadSrc( "friendlies/friendly-bug-"+str(self.level)+".png" )
+		if self.energy < 1000 - self.energy_up_rate:
+			self.energy += self.energy_up_rate
+			if int(self.energy / 200) > int(before / 200):
+				self.level = int(self.energy / 200) + 1
+				if self.level > 3:
+					self.level = 3
+				else:
+					self.ReloadSrc( "friendlies/friendly-plant-"+str(self.level)+".png" )
 
 	# Update
 	def Update( self, frame_time, ticks ):
 		m = frame_time / 1000.0
 
-		# Set energy level
-		#self.energy += (self.energy_up_rate * m)
+		if self.captured:
+			self.vector = Vector2D.AddVectors( Config.player.vector, [5, 20] )
 
-		# Get ground height at centre x of bug
-		ground_height, ground_angle = Config.world.GroundInfo( self.vector[0] + (self.rect.w/2) )
-
-		# Get bottom of bug
-		#self.image_angle = ground_angle
-		bottom = self.vector[1] + self.rect.h
-
-		# Check if bug is above the ground
-		if bottom < ground_height - 1:
-			self.vector = Vector2D.AddVectors( self.vector, [0, self.gravity * m] )
-
-		elif bottom > ground_height:
-			self.vector = Vector2D.SubtractVectors( self.vector, [0, 1] )
 		else:
-			self.SetAnimationState( "eating" )
 
-			if self.last_spawn <= 0:
-				self.Spawn( )
-				self.energy += self.energy_up_rate
+			# Set energy level
+			#self.energy += (self.energy_up_rate * m)
+
+			# Get ground height at centre x of bug
+			ground_height, ground_angle = Config.world.GroundInfo( self.vector[0] + (self.rect.w/2) )
+
+			# Get bottom of bug
+			#self.image_angle = ground_angle
+			bottom = self.vector[1] + self.rect.h
+
+			# Check if bug is above the ground
+			if bottom < ground_height - 1:
+				self.vector = Vector2D.AddVectors( self.vector, [0, self.gravity * m] )
+
+			elif bottom > ground_height:
+				self.vector = Vector2D.SubtractVectors( self.vector, [0, 1] )
 			else:
-				self.last_spawn -= frame_time
+				self.SetAnimationState( "eating" )
+
+				if self.last_spawn <= 0:
+					self.Spawn( )
+					self.energy += self.energy_up_rate
+				else:
+					self.last_spawn -= frame_time
 
 		AnimatedSprite.Update( self, frame_time, ticks )
+
+
 
 
 # -------- Friendly Plant Energy Collision Listener --------
@@ -144,3 +234,11 @@ class FriendlyPlantEnergyCollisionListener( EventListener ):
 	def Notify( self, event ):
 		if event.name == "Friendly Plant Energy Collision Event":
 			event.data.IncreaseEnergy( )
+
+
+# -------- Friendly Tree Player Collision Listener --------
+class FriendlyTreePlayerCollisionListener( EventListener ):
+	# Notify
+	def Notify( self, event ):
+		if event.name == "Friendly Tree Player Collision Event":
+			event.data.CapturedByPlayer( )
