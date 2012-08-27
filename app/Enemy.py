@@ -177,7 +177,7 @@ class EnemyTree( AnimatedSprite ):
 		if self.level == 2:
 			if self.last_spawn <= 0:
 				self.last_spawn = self.spawn_wait
-				r = 1 + int(self.energy / 60)
+				r = 1 + int(self.energy / 200)
 				for i in range(r):
 					EnemyFlying( self.vector )
 			else:
