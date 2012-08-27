@@ -13,7 +13,10 @@ import app.Config
 # Definitions
 
 # Initialise pygame
-import pygame, pygame._view
+import pygame
+
+#import pygame._view # COMMENT THIS LINE OUT FOR MAC OSX & LINUX
+
 pygame.init( )
 
 # Import app logic
@@ -26,7 +29,7 @@ app.Config.app = App( )
 # Setup the screen
 app.Config.screen = pygame.display.set_mode( [app.Config.screen_w, app.Config.screen_h] )
 pygame.display.set_caption( app.Config.app_title )
-pygame.display.set_icon( pygame.image.load( "icon.png" ).convert_alpha( ) )
+pygame.display.set_icon( pygame.image.load( "sprites/player/player-life.png" ).convert_alpha( ) )
 app.Config.screen.convert( )
 
 # Create the clock

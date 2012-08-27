@@ -16,7 +16,7 @@ class App( ):
 	prefs = None
 	sprite_groups = {}
 
-	menu_text = "NEON SPORES - Click to start game"
+	menu_text = "Click to start game"
 
 
 	# Init
@@ -135,11 +135,15 @@ class App( ):
 
 	def TickMenu( self, frame_time ):
 		pygame.font.init( )
-		font = pygame.font.SysFont( "Arial", 14 )
 
-		text = font.render( self.menu_text, False, (255,255,255) )
+		font_title = pygame.font.Font( "fonts/edunline.ttf", 60 )
+		font_sub = pygame.font.Font( "fonts/edunline.ttf", 30 )
 
-		Config.screen.blit( text, ((Config.screen_w / 2) - (text.get_width() / 2), (Config.screen_h / 2) - (text.get_height() / 2)) )
+		text_title = font_title.render( "Neon Spores", False, Config.colour_player )
+		text_sub = font_sub.render( self.menu_text, False, Config.colour_enemy )
+
+		Config.screen.blit( text_title, ((Config.screen_w / 2) - (text_title.get_width() / 2), (Config.screen_h / 2) - (text_title.get_height() / 2)) )
+		Config.screen.blit( text_sub, ((Config.screen_w / 2) - (text_sub.get_width() / 2), (Config.screen_h / 2) - (text_title.get_height() / 2) + 100) )
 
 		pygame.display.flip( )
 
