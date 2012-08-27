@@ -20,7 +20,7 @@ class EnemySpore( AnimatedSprite ):
 	move_vector = [0,0]
 	speed = 40
 	gravity = 4
-	health = 20.0
+	health = 5.0
 
 	# Init
 	def __init__( self, vector ):

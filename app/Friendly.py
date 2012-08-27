@@ -17,7 +17,7 @@ sound_plant_pickup = pygame.mixer.Sound( "sounds/friendly-plant-pickup.wav" )
 class FriendlySpore( AnimatedSprite ):
 	speed = 40
 	gravity = 1
-	health = 20.0
+	health = 5.0
 
 	# Init
 	def __init__( self, vector ):
