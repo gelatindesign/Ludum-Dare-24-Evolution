@@ -20,7 +20,7 @@ class EnemySpore( AnimatedSprite ):
 	move_vector = [0,0]
 	speed = 40
 	gravity = 4
-	health = 60.0
+	health = 20.0
 
 	# Init
 	def __init__( self, vector ):
@@ -130,11 +130,11 @@ class EnemySpore( AnimatedSprite ):
 
 			self.vector[0] += (self.speed * m * -self.direction)
 
-		self.CheckOnWater( )
+			self.health -= m
+			if self.health <= 0:
+				self.kill( )
 
-		self.health -= m
-		if self.health <= 0:
-			self.kill( )
+		self.CheckOnWater( )
 
 		AnimatedSprite.Update( self, frame_time, ticks )
 
@@ -177,7 +177,7 @@ class EnemyTree( AnimatedSprite ):
 		if self.level == 2:
 			if self.last_spawn <= 0:
 				self.last_spawn = self.spawn_wait
-				r = 1 + int(self.energy / 200)
+				r = 1 + int(self.energy / 120)
 				for i in range(r):
 					EnemyFlying( self.vector )
 			else:

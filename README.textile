@@ -10,6 +10,8 @@ h2. Controls
 
 h2. Preferences
 
+Change your window size by editing "preferences.txt"
+
 h2. Tools
 
 * Code
@@ -18,3 +20,5 @@ h2. Tools
 * Graphics
 ** "Pickle":http://www.pickleeditor.com/
 ** "Gimp":http://www.gimp.org/
+* Sounds
+** "BFXR":http://www.bfxr.net/
