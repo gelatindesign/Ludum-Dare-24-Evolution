@@ -12,9 +12,11 @@ from Player import Player
 # -------- App --------
 class App( ):
 	running = False
-	mode = 'Game' # temp, default to  menu
+	mode = 'Menu' # temp, default to  menu
 	prefs = None
 	sprite_groups = {}
+
+	menu_text = "NEON SPORES - Click to start game"
 
 
 	# Init
@@ -56,6 +58,7 @@ class App( ):
 	def LoadGame( self ):
 		# Create the sprite groups and layers
 		self.sprite_groups['player'] = pygame.sprite.Group( )
+		self.sprite_groups['player-lives'] = pygame.sprite.Group( )
 		self.sprite_groups['energy-particles'] = pygame.sprite.Group( )
 
 		self.sprite_groups['friendly-plants'] = pygame.sprite.Group( )
@@ -72,8 +75,22 @@ class App( ):
 		Config.world = World( )
 		Config.world.GenerateTerrain( Config.screen_w * Config.world_size )
 
+		self.mode = "Game"
+
 		# Create the player
 		p = Player( )
+
+
+	# Unload Game
+	def UnloadGame( self ):
+		for s in self.sprites_all:
+			s.kill( )
+
+		self.menu_text = "You just lost, click to play again"
+
+		self.mode = "Menu"
+
+		Config.world_offset = 0
 
 
 	# Tick
@@ -97,6 +114,13 @@ class App( ):
 		# Get terrain
 		Config.screen.blit( Config.world.terrain, (Config.world_offset, 0) )
 
+		# Nav Map
+		Config.screen.blit( Config.world.terrain_minimap, (Config.screen_w - Config.world.terrain_minimap.get_width( ), 0) )
+		navmap = Config.world.NavMap( )
+
+		# Add map to screen
+		Config.screen.blit( navmap, (Config.screen_w - Config.world.terrain_minimap.get_width( ), 0))
+
 		# Update sprites
 		for s in self.sprites_all:
 			s.Update( int(frame_time), int(pygame.time.get_ticks()) )
@@ -109,8 +133,15 @@ class App( ):
 		pygame.display.flip( )
 
 
-	def TickMenu( self ):
-		pass
+	def TickMenu( self, frame_time ):
+		pygame.font.init( )
+		font = pygame.font.SysFont( "Arial", 14 )
+
+		text = font.render( self.menu_text, False, (255,255,255) )
+
+		Config.screen.blit( text, ((Config.screen_w / 2) - (text.get_width() / 2), (Config.screen_h / 2) - (text.get_height() / 2)) )
+
+		pygame.display.flip( )
 
 
 # -------- App Listener --------

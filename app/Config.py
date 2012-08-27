@@ -16,6 +16,11 @@ sprite_layer_terrain = 4
 world_size = 4
 world_offset = 0
 
+# Colours
+colour_player = (115, 241, 255)
+colour_friendly = (111, 255, 0)
+colour_enemy = (255, 0, 208)
+
 # Shared Objects
 app = None
 screen = None

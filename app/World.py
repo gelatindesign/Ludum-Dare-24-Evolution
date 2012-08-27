@@ -30,7 +30,7 @@ class World( ):
 	# Generate Terrain
 	def GenerateTerrain( self, width ):
 		rx = 50
-		ry = Config.screen_h / 20
+		ry = Config.screen_h / 40
 		rwater = 20 # % chance of being a water source
 
 		# Create terrain surface
@@ -75,6 +75,14 @@ class World( ):
 			x1 = x2
 			y1 = y2
 
+		# Create minimap
+		self.terrain_minimap = self.terrain.copy( )
+
+		wscale = int( Config.screen_w * 0.6 )
+		hscale = int( (Config.screen_h / Config.world_size) * 0.6 )
+
+		self.terrain_minimap = pygame.transform.scale( self.terrain_minimap, (wscale , hscale) )
+
 		# Add starting positions
 		FriendlyPlant( )
 		num_trees = 3
@@ -82,6 +90,7 @@ class World( ):
 			if t == "water":
 				num_trees -= 1
 				tree = FriendlyTree( [xc, ym - 80] )
+				self.SetGroundType( xc, "friendly" )
 				if num_trees == 0:
 					break;
 
@@ -93,8 +102,75 @@ class World( ):
 				tree.level = 2
 				tree.energy = 30
 				tree.last_spawn = 0
+				self.SetGroundType( xc, "enemy" )
 				if num_trees == 0:
 					break;
+
+
+	# Nav Map
+	def NavMap( self ):
+		navmap = pygame.Surface( (Config.world.terrain_minimap.get_width(), Config.world.terrain_minimap.get_height()) )
+		navmap.convert_alpha( )
+		navmap.set_colorkey((0,0,0))
+
+		navmap_scale_w = float(self.terrain_minimap.get_width( )) / float(Config.screen_w * Config.world_size)
+		navmap_scale_h = float(self.terrain_minimap.get_height( )) / float(Config.screen_h)
+
+		pygame.draw.lines( navmap, (100,100,100), True, (
+			(navmap_scale_w * -Config.world_offset, 0),
+			((navmap_scale_w * (Config.screen_w - Config.world_offset))-1, 0),
+			((navmap_scale_w * (Config.screen_w - Config.world_offset))-1, (navmap_scale_h * Config.screen_h)-1),
+			(navmap_scale_w * -Config.world_offset, (navmap_scale_h * Config.screen_h)-1)
+		) )
+
+		# Add sprites
+		for s in Config.app.sprites_all:
+			x = s.vector[0] * navmap_scale_w
+			y = s.vector[1] * navmap_scale_h
+			width = 2
+			height = 2
+
+			if s.__class__.__name__ == "Player":
+				colour = Config.colour_player
+			elif s.__class__.__name__ == "FriendlyPlant":
+				colour = Config.colour_friendly
+				if s.level > 1:
+					height = 4
+			elif s.__class__.__name__ == "FriendlyTree":
+				colour = Config.colour_friendly
+				height = 8
+				y += 4
+				if s.level == 2:
+					height = 16
+					y -= 8
+			elif s.__class__.__name__ == "EnergyParticle":
+				colour = (255,255,255)
+				height = 1
+				width = 1
+				y -= 1
+			elif s.__class__.__name__ == "EnemyFlying":
+				colour = Config.colour_enemy
+				width = s.level + 1
+				height = s.level + 1
+			elif s.__class__.__name__ == "EnemyTree":
+				colour = Config.colour_enemy
+				height = 8
+				y += 2
+			else:
+				continue
+
+			if width < 2: width = 2
+			if height < 2: height = 2
+
+			pygame.draw.rect( navmap, colour, (
+				x,
+				y,
+				width,
+				height
+			) )
+
+
+		return navmap
 
 
 	# Get Ground Height and Angle

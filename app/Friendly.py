@@ -3,15 +3,21 @@
 # -----------------------------
 
 # Imports
-import random
+import random, pygame.mixer
 import Config, Vector2D
 from Sprite import StaticSprite, AnimatedSprite, MovingSprite
 from Event import EventListener, Event
+
+# Load sounds
+pygame.mixer.init( )
+sound_spawn = pygame.mixer.Sound( "sounds/friendly-spawn.wav" )
+sound_plant_pickup = pygame.mixer.Sound( "sounds/friendly-plant-pickup.wav" )
 
 # -------- Friendly Spore --------
 class FriendlySpore( AnimatedSprite ):
 	speed = 40
 	gravity = 1
+	health = 60.0
 
 	# Init
 	def __init__( self, vector ):
@@ -69,6 +75,13 @@ class FriendlySpore( AnimatedSprite ):
 	def Update( self, frame_time, ticks ):
 		m = frame_time / 1000.0
 
+		if self.vector[0] <= 0:
+			self.direction = -self.direction
+			self.vector[0] = 0
+		elif self.vector[0] >= Config.screen_w * Config.world_size:
+			self.direction = -self.direction
+			self.vector[0] = Config.screen_w * Config.world_size 
+
 		# Get ground height
 		ground_height, ground_angle = Config.world.GroundInfo( self.vector[0] )
 
@@ -94,6 +107,10 @@ class FriendlySpore( AnimatedSprite ):
 			self.vector[0] += (self.speed * m * self.direction)
 
 		self.CheckOnWater( )
+
+		self.health -= m
+		if self.health <= 0:
+			self.kill( )
 
 		AnimatedSprite.Update( self, frame_time, ticks )
 
@@ -131,6 +148,8 @@ class FriendlyTree( AnimatedSprite ):
 
 			Config.player.has_captured = True
 
+			sound_plant_pickup.play( )
+
 
 	# Update
 	def Update( self, frame_time, ticks ):
@@ -150,8 +169,7 @@ class FriendlyTree( AnimatedSprite ):
 class FriendlyPlant( AnimatedSprite ):
 	gravity = 400.0 # fall pixels per second
 	spawn_wait = 10000 # every 10 seconds
-	energy_up_rate = 5
-	
+	energy_up_rate = 10
 
 	# Init
 	def __init__( self ):
@@ -186,6 +204,15 @@ class FriendlyPlant( AnimatedSprite ):
 	# Spawn
 	def Spawn( self ):
 		self.last_spawn = self.spawn_wait
+
+		dist_to_player = abs(self.vector[0] - Config.player.vector[0])
+		if dist_to_player == 0: dist_to_player = 1
+		volume = 100.0 / float(Config.screen_w * Config.world_size)
+		volume = volume * (float(Config.screen_w * Config.world_size) - float(dist_to_player * 1.5))
+		if volume < 0: volume = 1.0
+		volume = volume / 200.0
+		sound_spawn.set_volume( volume )
+		sound_spawn.play( )
 
 		# Create a friendly spore
 		if self.level == 1:

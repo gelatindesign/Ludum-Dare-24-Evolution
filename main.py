@@ -32,17 +32,20 @@ app.Config.screen.convert( )
 # Create the clock
 clock = pygame.time.Clock( )
 
-# TEMP
-app.Config.app.LoadGame( )
-
 
 # -------- Main Program Loop --------
 while app.Config.app.running:
 
 	# Capture events
 	for pe in pygame.event.get( ):
-		event = PygameEvent( pe )
-		app.Config.app.em.Post( event )
+		if app.Config.app.mode == "Menu":
+			if pe.type == pygame.MOUSEBUTTONDOWN:
+				app.Config.app.LoadGame( )
+			elif pe.type == pygame.QUIT:
+				app.Config.app.running = False
+		else:
+			event = PygameEvent( pe )
+			app.Config.app.em.Post( event )
 
 	# Process tick
 	clock.tick( app.Config.fps )

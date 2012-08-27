@@ -3,10 +3,14 @@
 # ---------------------------
 
 # Imports
-import random
+import random, pygame.mixer
 import Config, Vector2D
 from Sprite import StaticSprite, AnimatedSprite, MovingSprite
 from Event import EventListener, Event
+
+# Load sounds
+pygame.mixer.init( )
+sound_die = pygame.mixer.Sound( "sounds/enemy-die.wav" )
 
 
 # -------- Enemy Spore --------
@@ -14,8 +18,9 @@ class EnemySpore( AnimatedSprite ):
 	looking = False
 	growing = False
 	move_vector = [0,0]
-	speed = 10
+	speed = 40
 	gravity = 4
+	health = 60.0
 
 	# Init
 	def __init__( self, vector ):
@@ -127,6 +132,10 @@ class EnemySpore( AnimatedSprite ):
 
 		self.CheckOnWater( )
 
+		self.health -= m
+		if self.health <= 0:
+			self.kill( )
+
 		AnimatedSprite.Update( self, frame_time, ticks )
 
 
@@ -209,7 +218,7 @@ class EnemyFlying( MovingSprite ):
 		self.last_spawn = 0
 		self.target = False
 		self.level = -1
-		self.health = 3
+		self.health = 2
 
 		self.AddAnimationState( "flying", 0, 5, 12 )
 		self.SetAnimationState( "flying" )
@@ -255,26 +264,40 @@ class EnemyFlying( MovingSprite ):
 
 
 	# Spawn
-	def Spawn( self ):
-		r = self.level * 5
+	def Spawn( self, r=None ):
+
+		if r == None:
+			r = self.level * 5
+
 		for i in range( r ):
 			EnemySpore( Vector2D.AddVectors(self.vector, [self.rect.w/2, 0]) )
 
 		# Level up
 		self.level += 1
-		if self.level > 7:
-			self.level = 7
+		if self.level > 4:
+			self.level = 4
 		else:
 			if self.level > 1:
-				self.health = self.level * 3
+				self.health = self.level * 2
 				self.ReloadSrc( "enemies/flying-"+str(self.level)+".png" )
 
 	# Die Overly Dramtically
 	def DieOverlyDramatically( self ):
-		self.Spawn( )
+		self.Spawn( 1 )
 		if self.target:
 			self.target.targeted = False
 			self.target.targeted_by = None
+
+		dist_to_player = abs(self.vector[0] - Config.player.vector[0])
+		if dist_to_player == 0: dist_to_player = 1
+		volume = 100.0 / float(Config.screen_w * Config.world_size)
+		volume = volume * (float(Config.screen_w * Config.world_size) - float(dist_to_player * 1.5))
+		if volume < 0: volume = 1.0
+		volume = volume / 200.0
+		sound_die.set_volume( volume )
+
+		sound_die.play( )
+
 		self.kill( )
 
 	# Update
