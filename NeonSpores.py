@@ -15,7 +15,7 @@ import app.Config
 # Initialise pygame
 import pygame
 
-#import pygame._view # COMMENT THIS LINE OUT FOR MAC OSX & LINUX
+import pygame._view # COMMENT THIS LINE OUT FOR MAC OSX & LINUX
 
 pygame.init( )
 

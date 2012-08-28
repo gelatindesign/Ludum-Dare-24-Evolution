@@ -43,7 +43,7 @@ for files in os.listdir(file_root + 'fonts/'):
 
 DATA_FILES.append(file_root + "preferences.txt")
 
-APP = ['main.py']
+APP = ['NeonSpores.py']
 OPTIONS = {'argv_emulation': True}
 
 setup(
